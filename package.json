@@ -1,0 +1,23 @@
+{
+  "name": "stock-screener",
+  "version": "1.0.0",
+  "description": "A web application for screening stocks based on fundamental parameters",
+  "main": "index.html",
+  "scripts": {
+    "start": "python3 -m http.server 8000 2>/dev/null || python -m http.server 8000 2>/dev/null || npx http-server -p 8000",
+    "test": "echo \"No tests specified\" && exit 0"
+  },
+  "keywords": [
+    "stock",
+    "screener",
+    "finance",
+    "fundamental",
+    "analysis"
+  ],
+  "author": "TzoharLary",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/TzoharLary/StockScreener.git"
+  }
+}

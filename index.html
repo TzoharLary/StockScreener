@@ -1,0 +1,557 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stock Screener</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f5f5f5;
+            color: #333;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 2rem 0;
+            text-align: center;
+            margin-bottom: 2rem;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        .filter-panel {
+            background: white;
+            padding: 2rem;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            margin-bottom: 2rem;
+        }
+
+        .filter-panel h2 {
+            margin-bottom: 1.5rem;
+            color: #333;
+            border-bottom: 3px solid #667eea;
+            padding-bottom: 0.5rem;
+        }
+
+        .filter-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .filter-group label {
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            color: #555;
+        }
+
+        .filter-group input,
+        .filter-group select {
+            padding: 0.8rem;
+            border: 2px solid #e1e1e1;
+            border-radius: 5px;
+            font-size: 1rem;
+            transition: border-color 0.3s ease;
+        }
+
+        .filter-group input:focus,
+        .filter-group select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .filter-actions {
+            margin-top: 1.5rem;
+            display: flex;
+            gap: 1rem;
+        }
+
+        .btn {
+            padding: 0.8rem 2rem;
+            border: none;
+            border-radius: 5px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-secondary {
+            background: #f8f9fa;
+            color: #555;
+            border: 2px solid #e1e1e1;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .results-section {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        .results-header {
+            background: #f8f9fa;
+            padding: 1.5rem;
+            border-bottom: 1px solid #e1e1e1;
+        }
+
+        .results-header h2 {
+            color: #333;
+        }
+
+        .results-count {
+            color: #667eea;
+            font-weight: 600;
+            margin-top: 0.5rem;
+        }
+
+        .stock-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .stock-table th,
+        .stock-table td {
+            padding: 1rem;
+            text-align: left;
+            border-bottom: 1px solid #e1e1e1;
+        }
+
+        .stock-table th {
+            background: #f8f9fa;
+            font-weight: 600;
+            color: #555;
+            position: sticky;
+            top: 0;
+        }
+
+        .stock-table tbody tr:hover {
+            background: #f8f9fa;
+        }
+
+        .stock-symbol {
+            font-weight: 600;
+            color: #667eea;
+        }
+
+        .stock-name {
+            color: #666;
+            font-size: 0.9rem;
+        }
+
+        .positive {
+            color: #28a745;
+        }
+
+        .negative {
+            color: #dc3545;
+        }
+
+        .table-container {
+            max-height: 500px;
+            overflow-y: auto;
+        }
+
+        @media (max-width: 768px) {
+            .filter-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .filter-actions {
+                flex-direction: column;
+            }
+            
+            .table-container {
+                overflow-x: auto;
+            }
+            
+            .stock-table {
+                min-width: 600px;
+            }
+        }
+
+        .loading {
+            text-align: center;
+            padding: 2rem;
+            color: #666;
+        }
+
+        .no-results {
+            text-align: center;
+            padding: 3rem;
+            color: #666;
+        }
+
+        .no-results h3 {
+            margin-bottom: 1rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Stock Screener</h1>
+            <p>Screen stocks based on fundamental parameters</p>
+        </div>
+
+        <div class="filter-panel">
+            <h2>Filter Criteria</h2>
+            <div class="filter-grid">
+                <div class="filter-group">
+                    <label for="marketCap">Market Cap (Min)</label>
+                    <select id="marketCap">
+                        <option value="">Any</option>
+                        <option value="small">Small Cap (&lt; $2B)</option>
+                        <option value="mid">Mid Cap ($2B - $10B)</option>
+                        <option value="large">Large Cap (&gt; $10B)</option>
+                    </select>
+                </div>
+
+                <div class="filter-group">
+                    <label for="peRatio">P/E Ratio (Max)</label>
+                    <input type="number" id="peRatio" placeholder="e.g., 25" step="0.1">
+                </div>
+
+                <div class="filter-group">
+                    <label for="pbRatio">P/B Ratio (Max)</label>
+                    <input type="number" id="pbRatio" placeholder="e.g., 3" step="0.1">
+                </div>
+
+                <div class="filter-group">
+                    <label for="debtToEquity">Debt/Equity (Max)</label>
+                    <input type="number" id="debtToEquity" placeholder="e.g., 1.5" step="0.1">
+                </div>
+
+                <div class="filter-group">
+                    <label for="roe">ROE (Min %)</label>
+                    <input type="number" id="roe" placeholder="e.g., 15" step="0.1">
+                </div>
+
+                <div class="filter-group">
+                    <label for="sector">Sector</label>
+                    <select id="sector">
+                        <option value="">All Sectors</option>
+                        <option value="Technology">Technology</option>
+                        <option value="Healthcare">Healthcare</option>
+                        <option value="Financial">Financial</option>
+                        <option value="Consumer">Consumer</option>
+                        <option value="Energy">Energy</option>
+                        <option value="Industrial">Industrial</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="filter-actions">
+                <button class="btn btn-primary" onclick="applyFilters()">Apply Filters</button>
+                <button class="btn btn-secondary" onclick="clearFilters()">Clear All</button>
+            </div>
+        </div>
+
+        <div class="results-section">
+            <div class="results-header">
+                <h2>Screening Results</h2>
+                <div class="results-count" id="resultsCount">Loading...</div>
+            </div>
+            <div class="table-container">
+                <table class="stock-table">
+                    <thead>
+                        <tr>
+                            <th>Symbol</th>
+                            <th>Company Name</th>
+                            <th>Price</th>
+                            <th>Market Cap</th>
+                            <th>P/E Ratio</th>
+                            <th>P/B Ratio</th>
+                            <th>Debt/Equity</th>
+                            <th>ROE (%)</th>
+                            <th>Sector</th>
+                        </tr>
+                    </thead>
+                    <tbody id="stockTableBody">
+                        <tr>
+                            <td colspan="9" class="loading">Loading stock data...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Mock stock data for demonstration
+        const stockData = [
+            {
+                symbol: 'AAPL',
+                name: 'Apple Inc.',
+                price: 175.43,
+                marketCap: 2800000000000,
+                peRatio: 28.5,
+                pbRatio: 39.8,
+                debtToEquity: 1.73,
+                roe: 26.4,
+                sector: 'Technology'
+            },
+            {
+                symbol: 'GOOGL',
+                name: 'Alphabet Inc.',
+                price: 132.76,
+                marketCap: 1650000000000,
+                peRatio: 22.1,
+                pbRatio: 5.2,
+                debtToEquity: 0.12,
+                roe: 18.7,
+                sector: 'Technology'
+            },
+            {
+                symbol: 'MSFT',
+                name: 'Microsoft Corporation',
+                price: 378.85,
+                marketCap: 2820000000000,
+                peRatio: 32.4,
+                pbRatio: 12.1,
+                debtToEquity: 0.37,
+                roe: 35.1,
+                sector: 'Technology'
+            },
+            {
+                symbol: 'TSLA',
+                name: 'Tesla Inc.',
+                price: 248.50,
+                marketCap: 790000000000,
+                peRatio: 65.7,
+                pbRatio: 9.8,
+                debtToEquity: 0.17,
+                roe: 19.3,
+                sector: 'Consumer'
+            },
+            {
+                symbol: 'JNJ',
+                name: 'Johnson & Johnson',
+                price: 160.32,
+                marketCap: 421000000000,
+                peRatio: 15.6,
+                pbRatio: 5.1,
+                debtToEquity: 0.46,
+                roe: 25.8,
+                sector: 'Healthcare'
+            },
+            {
+                symbol: 'JPM',
+                name: 'JPMorgan Chase & Co.',
+                price: 147.92,
+                marketCap: 434000000000,
+                peRatio: 10.8,
+                pbRatio: 1.6,
+                debtToEquity: 1.21,
+                roe: 15.2,
+                sector: 'Financial'
+            },
+            {
+                symbol: 'V',
+                name: 'Visa Inc.',
+                price: 258.73,
+                marketCap: 544000000000,
+                peRatio: 31.2,
+                pbRatio: 13.4,
+                debtToEquity: 0.36,
+                roe: 38.7,
+                sector: 'Financial'
+            },
+            {
+                symbol: 'PG',
+                name: 'Procter & Gamble',
+                price: 155.21,
+                marketCap: 369000000000,
+                peRatio: 26.1,
+                pbRatio: 7.8,
+                debtToEquity: 0.54,
+                roe: 29.9,
+                sector: 'Consumer'
+            },
+            {
+                symbol: 'XOM',
+                name: 'Exxon Mobil Corporation',
+                price: 104.65,
+                marketCap: 441000000000,
+                peRatio: 14.3,
+                pbRatio: 1.9,
+                debtToEquity: 0.25,
+                roe: 17.5,
+                sector: 'Energy'
+            },
+            {
+                symbol: 'HD',
+                name: 'The Home Depot Inc.',
+                price: 327.89,
+                marketCap: 333000000000,
+                peRatio: 24.7,
+                pbRatio: 45.2,
+                debtToEquity: 14.8,
+                roe: 132.4,
+                sector: 'Consumer'
+            }
+        ];
+
+        let filteredData = [...stockData];
+
+        function formatMarketCap(marketCap) {
+            if (marketCap >= 1000000000000) {
+                return '$' + (marketCap / 1000000000000).toFixed(2) + 'T';
+            } else if (marketCap >= 1000000000) {
+                return '$' + (marketCap / 1000000000).toFixed(2) + 'B';
+            } else if (marketCap >= 1000000) {
+                return '$' + (marketCap / 1000000).toFixed(2) + 'M';
+            }
+            return '$' + marketCap.toLocaleString();
+        }
+
+        function getMarketCapCategory(marketCap) {
+            if (marketCap < 2000000000) return 'small';
+            if (marketCap < 10000000000) return 'mid';
+            return 'large';
+        }
+
+        function renderStockTable(data) {
+            const tableBody = document.getElementById('stockTableBody');
+            const resultsCount = document.getElementById('resultsCount');
+            
+            resultsCount.textContent = `Found ${data.length} stocks matching criteria`;
+            
+            if (data.length === 0) {
+                tableBody.innerHTML = `
+                    <tr>
+                        <td colspan="9" class="no-results">
+                            <h3>No stocks found</h3>
+                            <p>Try adjusting your filter criteria</p>
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            tableBody.innerHTML = data.map(stock => `
+                <tr>
+                    <td>
+                        <div class="stock-symbol">${stock.symbol}</div>
+                    </td>
+                    <td>
+                        <div class="stock-name">${stock.name}</div>
+                    </td>
+                    <td>$${stock.price.toFixed(2)}</td>
+                    <td>${formatMarketCap(stock.marketCap)}</td>
+                    <td>${stock.peRatio.toFixed(1)}</td>
+                    <td>${stock.pbRatio.toFixed(1)}</td>
+                    <td>${stock.debtToEquity.toFixed(2)}</td>
+                    <td class="${stock.roe >= 20 ? 'positive' : ''}">${stock.roe.toFixed(1)}%</td>
+                    <td>${stock.sector}</td>
+                </tr>
+            `).join('');
+        }
+
+        function applyFilters() {
+            const marketCap = document.getElementById('marketCap').value;
+            const peRatio = parseFloat(document.getElementById('peRatio').value);
+            const pbRatio = parseFloat(document.getElementById('pbRatio').value);
+            const debtToEquity = parseFloat(document.getElementById('debtToEquity').value);
+            const roe = parseFloat(document.getElementById('roe').value);
+            const sector = document.getElementById('sector').value;
+
+            filteredData = stockData.filter(stock => {
+                // Market Cap filter
+                if (marketCap && getMarketCapCategory(stock.marketCap) !== marketCap) {
+                    return false;
+                }
+                
+                // P/E Ratio filter
+                if (!isNaN(peRatio) && stock.peRatio > peRatio) {
+                    return false;
+                }
+                
+                // P/B Ratio filter
+                if (!isNaN(pbRatio) && stock.pbRatio > pbRatio) {
+                    return false;
+                }
+                
+                // Debt/Equity filter
+                if (!isNaN(debtToEquity) && stock.debtToEquity > debtToEquity) {
+                    return false;
+                }
+                
+                // ROE filter
+                if (!isNaN(roe) && stock.roe < roe) {
+                    return false;
+                }
+                
+                // Sector filter
+                if (sector && stock.sector !== sector) {
+                    return false;
+                }
+                
+                return true;
+            });
+
+            renderStockTable(filteredData);
+        }
+
+        function clearFilters() {
+            document.getElementById('marketCap').value = '';
+            document.getElementById('peRatio').value = '';
+            document.getElementById('pbRatio').value = '';
+            document.getElementById('debtToEquity').value = '';
+            document.getElementById('roe').value = '';
+            document.getElementById('sector').value = '';
+            
+            filteredData = [...stockData];
+            renderStockTable(filteredData);
+        }
+
+        // Initialize the table with all stocks
+        document.addEventListener('DOMContentLoaded', function() {
+            setTimeout(() => {
+                renderStockTable(stockData);
+            }, 500); // Simulate loading delay
+        });
+    </script>
+</body>
+</html>
