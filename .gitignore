@@ -5,6 +5,11 @@ npm-debug.log*
 # Dependency directories
 node_modules/
 
+# Environment files (for security)
+.env
+.env.local
+.env.*.local
+
 # OS generated files
 .DS_Store
 .DS_Store?
@@ -24,3 +29,7 @@ Thumbs.db
 *.tmp
 *.temp
 /tmp/
+
+# API keys (if moved to separate file in future)
+api-keys.js
+secrets.js

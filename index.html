@@ -285,6 +285,7 @@
             <div class="filter-actions">
                 <button class="btn btn-primary" onclick="applyFilters()">Apply Filters</button>
                 <button class="btn btn-secondary" onclick="clearFilters()">Clear All</button>
+                <button class="btn btn-secondary" onclick="refreshData()" title="Refresh data from Twelve Data API">Refresh Data</button>
             </div>
         </div>
 
@@ -292,6 +293,9 @@
             <div class="results-header">
                 <h2>Screening Results</h2>
                 <div class="results-count" id="resultsCount">Loading...</div>
+                <div id="dataSource" style="font-size: 0.9em; color: #666; margin-top: 0.5rem;">
+                    Data powered by Twelve Data API
+                </div>
             </div>
             <div class="table-container">
                 <table class="stock-table">
@@ -318,122 +322,18 @@
         </div>
     </div>
 
+    <!-- Include configuration and API service -->
+    <script src="config.js"></script>
+    <script src="api-service.js"></script>
+    
     <script>
-        // Mock stock data for demonstration
-        const stockData = [
-            {
-                symbol: 'AAPL',
-                name: 'Apple Inc.',
-                price: 175.43,
-                marketCap: 2800000000000,
-                peRatio: 28.5,
-                pbRatio: 39.8,
-                debtToEquity: 1.73,
-                roe: 26.4,
-                sector: 'Technology'
-            },
-            {
-                symbol: 'GOOGL',
-                name: 'Alphabet Inc.',
-                price: 132.76,
-                marketCap: 1650000000000,
-                peRatio: 22.1,
-                pbRatio: 5.2,
-                debtToEquity: 0.12,
-                roe: 18.7,
-                sector: 'Technology'
-            },
-            {
-                symbol: 'MSFT',
-                name: 'Microsoft Corporation',
-                price: 378.85,
-                marketCap: 2820000000000,
-                peRatio: 32.4,
-                pbRatio: 12.1,
-                debtToEquity: 0.37,
-                roe: 35.1,
-                sector: 'Technology'
-            },
-            {
-                symbol: 'TSLA',
-                name: 'Tesla Inc.',
-                price: 248.50,
-                marketCap: 790000000000,
-                peRatio: 65.7,
-                pbRatio: 9.8,
-                debtToEquity: 0.17,
-                roe: 19.3,
-                sector: 'Consumer'
-            },
-            {
-                symbol: 'JNJ',
-                name: 'Johnson & Johnson',
-                price: 160.32,
-                marketCap: 421000000000,
-                peRatio: 15.6,
-                pbRatio: 5.1,
-                debtToEquity: 0.46,
-                roe: 25.8,
-                sector: 'Healthcare'
-            },
-            {
-                symbol: 'JPM',
-                name: 'JPMorgan Chase & Co.',
-                price: 147.92,
-                marketCap: 434000000000,
-                peRatio: 10.8,
-                pbRatio: 1.6,
-                debtToEquity: 1.21,
-                roe: 15.2,
-                sector: 'Financial'
-            },
-            {
-                symbol: 'V',
-                name: 'Visa Inc.',
-                price: 258.73,
-                marketCap: 544000000000,
-                peRatio: 31.2,
-                pbRatio: 13.4,
-                debtToEquity: 0.36,
-                roe: 38.7,
-                sector: 'Financial'
-            },
-            {
-                symbol: 'PG',
-                name: 'Procter & Gamble',
-                price: 155.21,
-                marketCap: 369000000000,
-                peRatio: 26.1,
-                pbRatio: 7.8,
-                debtToEquity: 0.54,
-                roe: 29.9,
-                sector: 'Consumer'
-            },
-            {
-                symbol: 'XOM',
-                name: 'Exxon Mobil Corporation',
-                price: 104.65,
-                marketCap: 441000000000,
-                peRatio: 14.3,
-                pbRatio: 1.9,
-                debtToEquity: 0.25,
-                roe: 17.5,
-                sector: 'Energy'
-            },
-            {
-                symbol: 'HD',
-                name: 'The Home Depot Inc.',
-                price: 327.89,
-                marketCap: 333000000000,
-                peRatio: 24.7,
-                pbRatio: 45.2,
-                debtToEquity: 14.8,
-                roe: 132.4,
-                sector: 'Consumer'
-            }
-        ];
-
-        let filteredData = [...stockData];
+        // Initialize API service
+        const apiService = new TwelveDataService();
+        
+        // Stock data (will be loaded from API)
+        let stockData = [];
+        let filteredData = [];
+        let isLoading = false;
 
         function formatMarketCap(marketCap) {
             if (marketCap >= 1000000000000) {
@@ -455,6 +355,19 @@
         function renderStockTable(data) {
             const tableBody = document.getElementById('stockTableBody');
             const resultsCount = document.getElementById('resultsCount');
+            
+            if (isLoading) {
+                resultsCount.textContent = 'Loading stock data...';
+                tableBody.innerHTML = `
+                    <tr>
+                        <td colspan="9" class="loading">
+                            <h3>Loading data from Twelve Data API...</h3>
+                            <p>Please wait while we fetch the latest stock information</p>
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
             
             resultsCount.textContent = `Found ${data.length} stocks matching criteria`;
             
@@ -487,6 +400,58 @@
                     <td>${stock.sector}</td>
                 </tr>
             `).join('');
+        }
+
+        // Load stock data from API
+        async function loadStockData() {
+            isLoading = true;
+            renderStockTable([]); // Show loading state
+            
+            try {
+                console.log('Loading stock data from Twelve Data API...');
+                stockData = await apiService.fetchMultipleStocks(CONFIG.DEFAULT_STOCKS);
+                filteredData = [...stockData];
+                
+                console.log('Stock data loaded successfully:', stockData.length, 'stocks');
+                
+                // Check if we're using fallback data (indicated by exact match with known fallback)
+                const usingFallback = stockData.some(stock => 
+                    stock.symbol === 'AAPL' && stock.price === 175.43
+                );
+                
+                const dataSource = document.getElementById('dataSource');
+                if (dataSource) {
+                    if (usingFallback) {
+                        dataSource.textContent = 'Using fallback data (Twelve Data API unavailable in this environment)';
+                        dataSource.style.color = '#f39c12';
+                    } else {
+                        dataSource.textContent = 'Data powered by Twelve Data API';
+                        dataSource.style.color = '#666';
+                    }
+                }
+                
+            } catch (error) {
+                console.error('Error loading stock data:', error);
+                
+                // Use fallback data as last resort
+                stockData = CONFIG.DEFAULT_STOCKS.map(symbol => apiService.getFallbackData(symbol));
+                filteredData = [...stockData];
+                
+                const dataSource = document.getElementById('dataSource');
+                if (dataSource) {
+                    dataSource.textContent = 'Using fallback data (API error)';
+                    dataSource.style.color = '#e74c3c';
+                }
+            } finally {
+                isLoading = false;
+                renderStockTable(filteredData);
+            }
+        }
+
+        // Add refresh functionality
+        async function refreshData() {
+            apiService.clearCache();
+            await loadStockData();
         }
 
         function applyFilters() {
@@ -546,11 +511,13 @@
             renderStockTable(filteredData);
         }
 
-        // Initialize the table with all stocks
+        // Initialize the application
         document.addEventListener('DOMContentLoaded', function() {
-            setTimeout(() => {
-                renderStockTable(stockData);
-            }, 500); // Simulate loading delay
+            console.log('Stock Screener initializing with Twelve Data API...');
+            console.log('API Key configured:', CONFIG.TWELVE_DATA_API_KEY ? 'Yes' : 'No');
+            
+            // Load stock data from API
+            loadStockData();
         });
     </script>
 </body>
