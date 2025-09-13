@@ -67,6 +67,105 @@
             border: 1px solid #e1e1e1;
         }
 
+        .autocomplete-container {
+            position: relative;
+            width: 100%;
+        }
+
+        .autocomplete-dropdown {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: white;
+            border: 2px solid #667eea;
+            border-top: none;
+            border-radius: 0 0 8px 8px;
+            max-height: 300px;
+            overflow-y: auto;
+            z-index: 1000;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            display: none;
+        }
+
+        .autocomplete-dropdown.show {
+            display: block;
+        }
+
+        .autocomplete-item {
+            padding: 12px 16px;
+            cursor: pointer;
+            border-bottom: 1px solid #f0f0f0;
+            transition: background-color 0.2s ease;
+        }
+
+        .autocomplete-item:last-child {
+            border-bottom: none;
+        }
+
+        .autocomplete-item:hover,
+        .autocomplete-item.highlighted {
+            background-color: #f8f9fa;
+        }
+
+        .autocomplete-item.selected {
+            background-color: #667eea;
+            color: white;
+        }
+
+        .autocomplete-symbol {
+            font-weight: 600;
+            color: #667eea;
+            font-size: 0.95em;
+        }
+
+        .autocomplete-item.selected .autocomplete-symbol {
+            color: white;
+        }
+
+        .autocomplete-name {
+            font-size: 0.9em;
+            color: #666;
+            margin-top: 2px;
+        }
+
+        .autocomplete-item.selected .autocomplete-name {
+            color: #e8f0fe;
+        }
+
+        .autocomplete-exchange {
+            font-size: 0.8em;
+            color: #999;
+            margin-top: 2px;
+        }
+
+        .autocomplete-item.selected .autocomplete-exchange {
+            color: #d0d9f7;
+        }
+
+        .autocomplete-loading {
+            padding: 12px 16px;
+            text-align: center;
+            color: #666;
+            font-style: italic;
+        }
+
+        .autocomplete-no-results {
+            padding: 12px 16px;
+            text-align: center;
+            color: #999;
+            font-style: italic;
+        }
+
+        #stockSearch {
+            border-radius: 8px 8px 0 0;
+        }
+
+        #stockSearch.has-results {
+            border-radius: 8px 8px 0 0;
+            border-bottom-color: transparent;
+        }
+
         .filter-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
@@ -250,7 +349,19 @@
             <div class="search-section">
                 <div class="filter-group">
                     <label for="stockSearch">Search by Name or Ticker</label>
-                    <input type="text" id="stockSearch" placeholder="e.g., Apple, AAPL, Microsoft, TSLA" oninput="applyFilters()">
+                    <div class="autocomplete-container">
+                        <input type="text" 
+                               id="stockSearch" 
+                               placeholder="e.g., Apple, AAPL, Microsoft, TSLA" 
+                               autocomplete="off"
+                               oninput="handleSearchInput(this.value)"
+                               onkeydown="handleSearchKeydown(event)"
+                               onfocus="handleSearchFocus()"
+                               onblur="handleSearchBlur()">
+                        <div id="autocompleteDropdown" class="autocomplete-dropdown">
+                            <!-- Autocomplete results will be inserted here -->
+                        </div>
+                    </div>
                 </div>
             </div>
             
@@ -353,6 +464,224 @@
             </div>
         </div>
     </div>
+
+    <script>
+        // Autocomplete functionality
+        class StockAutocomplete {
+            constructor() {
+                this.searchTimeout = null;
+                this.selectedIndex = -1;
+                this.searchResults = [];
+                this.isLoading = false;
+                this.apiService = null;
+            }
+
+            setApiService(apiService) {
+                this.apiService = apiService;
+            }
+
+            async searchSymbols(query) {
+                if (!this.apiService || query.length < 1) {
+                    return [];
+                }
+
+                this.isLoading = true;
+                this.updateDropdown([]);
+                this.showLoading();
+
+                try {
+                    const results = await this.apiService.searchSymbols(query);
+                    this.searchResults = results;
+                    this.isLoading = false;
+                    this.updateDropdown(results);
+                    return results;
+                } catch (error) {
+                    console.error('Autocomplete search error:', error);
+                    this.isLoading = false;
+                    this.updateDropdown([]);
+                    return [];
+                }
+            }
+
+            updateDropdown(results) {
+                const dropdown = document.getElementById('autocompleteDropdown');
+                const searchInput = document.getElementById('stockSearch');
+                
+                if (this.isLoading) {
+                    return; // Loading display handled separately
+                }
+
+                if (results.length === 0) {
+                    const query = searchInput.value.trim();
+                    if (query.length > 0) {
+                        dropdown.innerHTML = '<div class="autocomplete-no-results">No results found</div>';
+                        dropdown.classList.add('show');
+                        searchInput.classList.add('has-results');
+                    } else {
+                        this.hideDropdown();
+                    }
+                    return;
+                }
+
+                const html = results.map((result, index) => `
+                    <div class="autocomplete-item" 
+                         data-index="${index}"
+                         onclick="autocomplete.selectItem(${index})"
+                         onmouseenter="autocomplete.highlightItem(${index})">
+                        <div class="autocomplete-symbol">${result.symbol}</div>
+                        <div class="autocomplete-name">${result.name}</div>
+                        <div class="autocomplete-exchange">${result.exchange} • ${result.type}</div>
+                    </div>
+                `).join('');
+
+                dropdown.innerHTML = html;
+                dropdown.classList.add('show');
+                searchInput.classList.add('has-results');
+                this.selectedIndex = -1;
+            }
+
+            showLoading() {
+                const dropdown = document.getElementById('autocompleteDropdown');
+                const searchInput = document.getElementById('stockSearch');
+                
+                dropdown.innerHTML = '<div class="autocomplete-loading">Searching...</div>';
+                dropdown.classList.add('show');
+                searchInput.classList.add('has-results');
+            }
+
+            hideDropdown() {
+                const dropdown = document.getElementById('autocompleteDropdown');
+                const searchInput = document.getElementById('stockSearch');
+                
+                dropdown.classList.remove('show');
+                searchInput.classList.remove('has-results');
+                this.selectedIndex = -1;
+            }
+
+            highlightItem(index) {
+                const items = document.querySelectorAll('.autocomplete-item');
+                items.forEach((item, i) => {
+                    if (i === index) {
+                        item.classList.add('highlighted');
+                        this.selectedIndex = index;
+                    } else {
+                        item.classList.remove('highlighted');
+                    }
+                });
+            }
+
+            selectItem(index) {
+                if (index < 0 || index >= this.searchResults.length) return;
+                
+                const selected = this.searchResults[index];
+                const searchInput = document.getElementById('stockSearch');
+                
+                searchInput.value = `${selected.symbol} - ${selected.name}`;
+                this.hideDropdown();
+                
+                // Apply filters with the selected symbol
+                applyFilters();
+                
+                // Focus back to input
+                searchInput.blur();
+            }
+
+            handleKeydown(event) {
+                const dropdown = document.getElementById('autocompleteDropdown');
+                
+                if (!dropdown.classList.contains('show')) {
+                    return;
+                }
+
+                switch (event.key) {
+                    case 'ArrowDown':
+                        event.preventDefault();
+                        this.selectedIndex = Math.min(this.selectedIndex + 1, this.searchResults.length - 1);
+                        this.highlightItem(this.selectedIndex);
+                        break;
+                    
+                    case 'ArrowUp':
+                        event.preventDefault();
+                        this.selectedIndex = Math.max(this.selectedIndex - 1, -1);
+                        if (this.selectedIndex >= 0) {
+                            this.highlightItem(this.selectedIndex);
+                        } else {
+                            document.querySelectorAll('.autocomplete-item').forEach(item => {
+                                item.classList.remove('highlighted');
+                            });
+                        }
+                        break;
+                    
+                    case 'Enter':
+                        event.preventDefault();
+                        if (this.selectedIndex >= 0) {
+                            this.selectItem(this.selectedIndex);
+                        }
+                        break;
+                    
+                    case 'Escape':
+                        event.preventDefault();
+                        this.hideDropdown();
+                        break;
+                }
+            }
+
+            handleInput(value) {
+                clearTimeout(this.searchTimeout);
+                
+                if (value.trim().length === 0) {
+                    this.hideDropdown();
+                    applyFilters();
+                    return;
+                }
+
+                // Debounce search
+                this.searchTimeout = setTimeout(() => {
+                    this.searchSymbols(value.trim());
+                }, 300);
+
+                // Apply filters immediately for existing stocks
+                applyFilters();
+            }
+
+            handleFocus() {
+                const searchInput = document.getElementById('stockSearch');
+                const value = searchInput.value.trim();
+                
+                if (value.length > 0 && this.searchResults.length > 0) {
+                    document.getElementById('autocompleteDropdown').classList.add('show');
+                    searchInput.classList.add('has-results');
+                }
+            }
+
+            handleBlur() {
+                // Delay hiding to allow click events on dropdown items
+                setTimeout(() => {
+                    this.hideDropdown();
+                }, 150);
+            }
+        }
+
+        // Global autocomplete instance
+        const autocomplete = new StockAutocomplete();
+
+        // Event handlers for the search input
+        function handleSearchInput(value) {
+            autocomplete.handleInput(value);
+        }
+
+        function handleSearchKeydown(event) {
+            autocomplete.handleKeydown(event);
+        }
+
+        function handleSearchFocus() {
+            autocomplete.handleFocus();
+        }
+
+        function handleSearchBlur() {
+            autocomplete.handleBlur();
+        }
+    </script>
 
     <!-- Include configuration and API service -->
     <script src="config.js"></script>
@@ -487,7 +816,13 @@
         }
 
         function applyFilters() {
-            const stockSearch = document.getElementById('stockSearch').value.toLowerCase();
+            let stockSearch = document.getElementById('stockSearch').value.toLowerCase();
+            
+            // Extract symbol if user selected from autocomplete (format: "SYMBOL - Company Name")
+            if (stockSearch.includes(' - ')) {
+                stockSearch = stockSearch.split(' - ')[0].toLowerCase();
+            }
+            
             const marketCap = document.getElementById('marketCap').value;
             const peRatio = parseFloat(document.getElementById('peRatio').value);
             const peRatioMin = parseFloat(document.getElementById('peRatioMin').value);
@@ -577,6 +912,9 @@
         document.addEventListener('DOMContentLoaded', function() {
             console.log('Stock Screener initializing with Twelve Data API...');
             console.log('API Key configured:', CONFIG.TWELVE_DATA_API_KEY ? 'Yes' : 'No');
+            
+            // Initialize autocomplete with API service
+            autocomplete.setApiService(apiService);
             
             // Load stock data from API
             loadStockData();
