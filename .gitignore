@@ -33,3 +33,6 @@ Thumbs.db
 # API keys (if moved to separate file in future)
 api-keys.js
 secrets.js
+
+# Test files (development only)
+test-*.html

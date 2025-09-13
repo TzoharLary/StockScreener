@@ -180,6 +180,75 @@ class TwelveDataService {
         });
     }
 
+    // Symbol search for autocomplete functionality
+    async searchSymbols(query) {
+        if (!query || query.length < 1) {
+            return [];
+        }
+
+        try {
+            const url = `${this.baseUrl}/symbol_search?symbol=${encodeURIComponent(query)}&apikey=${this.apiKey}`;
+            const response = await this.fetchWithTimeout(url);
+            const data = await response.json();
+            
+            // Handle different possible response formats
+            const results = data.data || data.result || data;
+            
+            if (Array.isArray(results)) {
+                return results.slice(0, 10).map(item => ({
+                    symbol: item.symbol || item.ticker || item.code,
+                    name: item.instrument_name || item.name || item.company_name,
+                    exchange: item.exchange || item.market || 'N/A',
+                    type: item.instrument_type || item.type || 'Common Stock'
+                }));
+            }
+            
+            return [];
+        } catch (error) {
+            console.warn(`Symbol search failed for "${query}":`, error);
+            return this.getFallbackSearchResults(query);
+        }
+    }
+
+    // Fallback search results when API is unavailable
+    getFallbackSearchResults(query) {
+        const allSymbols = [
+            { symbol: 'AAPL', name: 'Apple Inc.', exchange: 'NASDAQ', type: 'Common Stock' },
+            { symbol: 'GOOGL', name: 'Alphabet Inc. Class A', exchange: 'NASDAQ', type: 'Common Stock' },
+            { symbol: 'GOOG', name: 'Alphabet Inc. Class C', exchange: 'NASDAQ', type: 'Common Stock' },
+            { symbol: 'MSFT', name: 'Microsoft Corporation', exchange: 'NASDAQ', type: 'Common Stock' },
+            { symbol: 'TSLA', name: 'Tesla Inc.', exchange: 'NASDAQ', type: 'Common Stock' },
+            { symbol: 'JNJ', name: 'Johnson & Johnson', exchange: 'NYSE', type: 'Common Stock' },
+            { symbol: 'JPM', name: 'JPMorgan Chase & Co.', exchange: 'NYSE', type: 'Common Stock' },
+            { symbol: 'V', name: 'Visa Inc.', exchange: 'NYSE', type: 'Common Stock' },
+            { symbol: 'PG', name: 'Procter & Gamble Company', exchange: 'NYSE', type: 'Common Stock' },
+            { symbol: 'XOM', name: 'Exxon Mobil Corporation', exchange: 'NYSE', type: 'Common Stock' },
+            { symbol: 'HD', name: 'The Home Depot Inc.', exchange: 'NYSE', type: 'Common Stock' },
+            { symbol: 'AMZN', name: 'Amazon.com Inc.', exchange: 'NASDAQ', type: 'Common Stock' },
+            { symbol: 'META', name: 'Meta Platforms Inc.', exchange: 'NASDAQ', type: 'Common Stock' },
+            { symbol: 'NVDA', name: 'NVIDIA Corporation', exchange: 'NASDAQ', type: 'Common Stock' },
+            { symbol: 'NFLX', name: 'Netflix Inc.', exchange: 'NASDAQ', type: 'Common Stock' },
+            { symbol: 'AMD', name: 'Advanced Micro Devices Inc.', exchange: 'NASDAQ', type: 'Common Stock' },
+            { symbol: 'INTC', name: 'Intel Corporation', exchange: 'NASDAQ', type: 'Common Stock' },
+            { symbol: 'CRM', name: 'Salesforce Inc.', exchange: 'NYSE', type: 'Common Stock' },
+            { symbol: 'ORCL', name: 'Oracle Corporation', exchange: 'NYSE', type: 'Common Stock' },
+            { symbol: 'ADBE', name: 'Adobe Inc.', exchange: 'NASDAQ', type: 'Common Stock' },
+            { symbol: 'DIS', name: 'The Walt Disney Company', exchange: 'NYSE', type: 'Common Stock' },
+            { symbol: 'KO', name: 'The Coca-Cola Company', exchange: 'NYSE', type: 'Common Stock' },
+            { symbol: 'PEP', name: 'PepsiCo Inc.', exchange: 'NASDAQ', type: 'Common Stock' },
+            { symbol: 'WMT', name: 'Walmart Inc.', exchange: 'NYSE', type: 'Common Stock' },
+            { symbol: 'CVX', name: 'Chevron Corporation', exchange: 'NYSE', type: 'Common Stock' }
+        ];
+
+        const queryLower = query.toLowerCase();
+        return allSymbols
+            .filter(stock => 
+                stock.symbol.toLowerCase().includes(queryLower) ||
+                stock.name.toLowerCase().includes(queryLower)
+            )
+            .slice(0, 10);
+    }
+
     // Clear cache (useful for manual refresh)
     clearCache() {
         this.cache.clear();
