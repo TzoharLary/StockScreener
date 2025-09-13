@@ -59,6 +59,14 @@
             padding-bottom: 0.5rem;
         }
 
+        .search-section {
+            margin-bottom: 1.5rem;
+            padding: 1rem;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border: 1px solid #e1e1e1;
+        }
+
         .filter-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
@@ -237,6 +245,15 @@
 
         <div class="filter-panel">
             <h2>Filter Criteria</h2>
+            
+            <!-- Search Section -->
+            <div class="search-section">
+                <div class="filter-group">
+                    <label for="stockSearch">Search by Name or Ticker</label>
+                    <input type="text" id="stockSearch" placeholder="e.g., Apple, AAPL, Microsoft, TSLA" oninput="applyFilters()">
+                </div>
+            </div>
+            
             <div class="filter-grid">
                 <div class="filter-group">
                     <label for="marketCap">Market Cap (Min)</label>
@@ -254,6 +271,11 @@
                 </div>
 
                 <div class="filter-group">
+                    <label for="peRatioMin">P/E Ratio (Min)</label>
+                    <input type="number" id="peRatioMin" placeholder="e.g., 10" step="0.1">
+                </div>
+
+                <div class="filter-group">
                     <label for="pbRatio">P/B Ratio (Max)</label>
                     <input type="number" id="pbRatio" placeholder="e.g., 3" step="0.1">
                 </div>
@@ -266,6 +288,16 @@
                 <div class="filter-group">
                     <label for="roe">ROE (Min %)</label>
                     <input type="number" id="roe" placeholder="e.g., 15" step="0.1">
+                </div>
+
+                <div class="filter-group">
+                    <label for="revenueGrowth">Revenue Growth (Min %)</label>
+                    <input type="number" id="revenueGrowth" placeholder="e.g., 10" step="0.1">
+                </div>
+
+                <div class="filter-group">
+                    <label for="revenueGrowthYears">Consecutive Years</label>
+                    <input type="number" id="revenueGrowthYears" placeholder="e.g., 3" min="1" max="10" step="1">
                 </div>
 
                 <div class="filter-group">
@@ -455,21 +487,37 @@
         }
 
         function applyFilters() {
+            const stockSearch = document.getElementById('stockSearch').value.toLowerCase();
             const marketCap = document.getElementById('marketCap').value;
             const peRatio = parseFloat(document.getElementById('peRatio').value);
+            const peRatioMin = parseFloat(document.getElementById('peRatioMin').value);
             const pbRatio = parseFloat(document.getElementById('pbRatio').value);
             const debtToEquity = parseFloat(document.getElementById('debtToEquity').value);
             const roe = parseFloat(document.getElementById('roe').value);
+            const revenueGrowth = parseFloat(document.getElementById('revenueGrowth').value);
+            const revenueGrowthYears = parseInt(document.getElementById('revenueGrowthYears').value);
             const sector = document.getElementById('sector').value;
 
             filteredData = stockData.filter(stock => {
+                // Search filter (by name or ticker)
+                if (stockSearch && 
+                    !stock.name.toLowerCase().includes(stockSearch) && 
+                    !stock.symbol.toLowerCase().includes(stockSearch)) {
+                    return false;
+                }
+                
                 // Market Cap filter
                 if (marketCap && getMarketCapCategory(stock.marketCap) !== marketCap) {
                     return false;
                 }
                 
-                // P/E Ratio filter
+                // P/E Ratio filter (max)
                 if (!isNaN(peRatio) && stock.peRatio > peRatio) {
+                    return false;
+                }
+                
+                // P/E Ratio filter (min)
+                if (!isNaN(peRatioMin) && stock.peRatio < peRatioMin) {
                     return false;
                 }
                 
@@ -488,6 +536,16 @@
                     return false;
                 }
                 
+                // Revenue Growth filter
+                if (!isNaN(revenueGrowth) && stock.revenueGrowth < revenueGrowth) {
+                    return false;
+                }
+                
+                // Revenue Growth Years filter
+                if (!isNaN(revenueGrowthYears) && stock.revenueGrowthYears < revenueGrowthYears) {
+                    return false;
+                }
+                
                 // Sector filter
                 if (sector && stock.sector !== sector) {
                     return false;
@@ -500,11 +558,15 @@
         }
 
         function clearFilters() {
+            document.getElementById('stockSearch').value = '';
             document.getElementById('marketCap').value = '';
             document.getElementById('peRatio').value = '';
+            document.getElementById('peRatioMin').value = '';
             document.getElementById('pbRatio').value = '';
             document.getElementById('debtToEquity').value = '';
             document.getElementById('roe').value = '';
+            document.getElementById('revenueGrowth').value = '';
+            document.getElementById('revenueGrowthYears').value = '';
             document.getElementById('sector').value = '';
             
             filteredData = [...stockData];

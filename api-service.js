@@ -98,7 +98,9 @@ class TwelveDataService {
             pbRatio: parseFloat(fundamentals?.valuations_metrics?.pb_ratio || fundamentals?.pb_ratio || 0),
             debtToEquity: parseFloat(fundamentals?.balance_sheet?.debt_to_equity || fundamentals?.debt_to_equity || 0),
             roe: parseFloat(fundamentals?.income_statement?.roe || fundamentals?.roe || 0),
-            sector: profile?.sector || this.guessSector(symbol)
+            sector: profile?.sector || this.guessSector(symbol),
+            revenueGrowth: parseFloat(fundamentals?.income_statement?.revenue_growth || fundamentals?.revenue_growth || 0),
+            revenueGrowthYears: parseInt(fundamentals?.income_statement?.consistent_growth_years || fundamentals?.consistent_growth_years || 1)
         };
     }
 
@@ -136,16 +138,16 @@ class TwelveDataService {
     // Provide fallback data when API fails
     getFallbackData(symbol) {
         const fallbackData = {
-            'AAPL': { symbol: 'AAPL', name: 'Apple Inc.', price: 175.43, marketCap: 2800000000000, peRatio: 28.5, pbRatio: 39.8, debtToEquity: 1.73, roe: 26.4, sector: 'Technology' },
-            'GOOGL': { symbol: 'GOOGL', name: 'Alphabet Inc.', price: 132.76, marketCap: 1650000000000, peRatio: 22.1, pbRatio: 5.2, debtToEquity: 0.12, roe: 18.7, sector: 'Technology' },
-            'MSFT': { symbol: 'MSFT', name: 'Microsoft Corporation', price: 378.85, marketCap: 2820000000000, peRatio: 32.4, pbRatio: 12.1, debtToEquity: 0.37, roe: 35.1, sector: 'Technology' },
-            'TSLA': { symbol: 'TSLA', name: 'Tesla Inc.', price: 248.50, marketCap: 790000000000, peRatio: 65.7, pbRatio: 9.8, debtToEquity: 0.17, roe: 19.3, sector: 'Consumer' },
-            'JNJ': { symbol: 'JNJ', name: 'Johnson & Johnson', price: 160.32, marketCap: 421000000000, peRatio: 15.6, pbRatio: 5.1, debtToEquity: 0.46, roe: 25.8, sector: 'Healthcare' },
-            'JPM': { symbol: 'JPM', name: 'JPMorgan Chase & Co.', price: 147.92, marketCap: 434000000000, peRatio: 10.8, pbRatio: 1.6, debtToEquity: 1.21, roe: 15.2, sector: 'Financial' },
-            'V': { symbol: 'V', name: 'Visa Inc.', price: 258.73, marketCap: 544000000000, peRatio: 31.2, pbRatio: 13.4, debtToEquity: 0.36, roe: 38.7, sector: 'Financial' },
-            'PG': { symbol: 'PG', name: 'Procter & Gamble', price: 155.21, marketCap: 369000000000, peRatio: 26.1, pbRatio: 7.8, debtToEquity: 0.54, roe: 29.9, sector: 'Consumer' },
-            'XOM': { symbol: 'XOM', name: 'Exxon Mobil Corporation', price: 104.65, marketCap: 441000000000, peRatio: 14.3, pbRatio: 1.9, debtToEquity: 0.25, roe: 17.5, sector: 'Energy' },
-            'HD': { symbol: 'HD', name: 'The Home Depot Inc.', price: 327.89, marketCap: 333000000000, peRatio: 24.7, pbRatio: 45.2, debtToEquity: 14.8, roe: 132.4, sector: 'Consumer' }
+            'AAPL': { symbol: 'AAPL', name: 'Apple Inc.', price: 175.43, marketCap: 2800000000000, peRatio: 28.5, pbRatio: 39.8, debtToEquity: 1.73, roe: 26.4, sector: 'Technology', revenueGrowth: 8.1, revenueGrowthYears: 4 },
+            'GOOGL': { symbol: 'GOOGL', name: 'Alphabet Inc.', price: 132.76, marketCap: 1650000000000, peRatio: 22.1, pbRatio: 5.2, debtToEquity: 0.12, roe: 18.7, sector: 'Technology', revenueGrowth: 12.5, revenueGrowthYears: 3 },
+            'MSFT': { symbol: 'MSFT', name: 'Microsoft Corporation', price: 378.85, marketCap: 2820000000000, peRatio: 32.4, pbRatio: 12.1, debtToEquity: 0.37, roe: 35.1, sector: 'Technology', revenueGrowth: 11.2, revenueGrowthYears: 5 },
+            'TSLA': { symbol: 'TSLA', name: 'Tesla Inc.', price: 248.50, marketCap: 790000000000, peRatio: 65.7, pbRatio: 9.8, debtToEquity: 0.17, roe: 19.3, sector: 'Consumer', revenueGrowth: 47.2, revenueGrowthYears: 6 },
+            'JNJ': { symbol: 'JNJ', name: 'Johnson & Johnson', price: 160.32, marketCap: 421000000000, peRatio: 15.6, pbRatio: 5.1, debtToEquity: 0.46, roe: 25.8, sector: 'Healthcare', revenueGrowth: 6.8, revenueGrowthYears: 2 },
+            'JPM': { symbol: 'JPM', name: 'JPMorgan Chase & Co.', price: 147.92, marketCap: 434000000000, peRatio: 10.8, pbRatio: 1.6, debtToEquity: 1.21, roe: 15.2, sector: 'Financial', revenueGrowth: 4.3, revenueGrowthYears: 1 },
+            'V': { symbol: 'V', name: 'Visa Inc.', price: 258.73, marketCap: 544000000000, peRatio: 31.2, pbRatio: 13.4, debtToEquity: 0.36, roe: 38.7, sector: 'Financial', revenueGrowth: 9.7, revenueGrowthYears: 3 },
+            'PG': { symbol: 'PG', name: 'Procter & Gamble', price: 155.21, marketCap: 369000000000, peRatio: 26.1, pbRatio: 7.8, debtToEquity: 0.54, roe: 29.9, sector: 'Consumer', revenueGrowth: 5.2, revenueGrowthYears: 2 },
+            'XOM': { symbol: 'XOM', name: 'Exxon Mobil Corporation', price: 104.65, marketCap: 441000000000, peRatio: 14.3, pbRatio: 1.9, debtToEquity: 0.25, roe: 17.5, sector: 'Energy', revenueGrowth: 15.8, revenueGrowthYears: 1 },
+            'HD': { symbol: 'HD', name: 'The Home Depot Inc.', price: 327.89, marketCap: 333000000000, peRatio: 24.7, pbRatio: 45.2, debtToEquity: 14.8, roe: 132.4, sector: 'Consumer', revenueGrowth: 7.4, revenueGrowthYears: 4 }
         };
 
         return fallbackData[symbol] || {
@@ -157,7 +159,9 @@ class TwelveDataService {
             pbRatio: 0,
             debtToEquity: 0,
             roe: 0,
-            sector: 'Technology'
+            sector: 'Technology',
+            revenueGrowth: 0,
+            revenueGrowthYears: 1
         };
     }
 
