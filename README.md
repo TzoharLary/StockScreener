@@ -16,9 +16,9 @@ A web application for screening stocks based on fundamental parameters. This app
 - **Responsive Design**: Works on desktop and mobile devices
 - **Clean Interface**: Modern, user-friendly design with clear data presentation
 
-## Demo Data
+## Live Data Integration
 
-The application includes sample data from 10 major stocks including:
+The application is integrated with **Twelve Data API** to provide real-time stock fundamental data. It includes data for 10 major stocks:
 - Apple (AAPL)
 - Alphabet/Google (GOOGL)
 - Microsoft (MSFT)
@@ -29,6 +29,12 @@ The application includes sample data from 10 major stocks including:
 - Procter & Gamble (PG)
 - Exxon Mobil (XOM)
 - The Home Depot (HD)
+
+### API Features
+- **Real-time Data**: Fetches live stock prices and fundamental metrics
+- **Fallback System**: Gracefully falls back to cached data if API is unavailable
+- **Caching**: 5-minute cache to minimize API calls and improve performance
+- **Error Handling**: Robust error handling with informative user feedback
 
 ## Getting Started
 
@@ -53,18 +59,22 @@ npm start
 1. **Set Filter Criteria**: Use the filter panel to set your desired screening parameters
 2. **Apply Filters**: Click "Apply Filters" to see stocks that match your criteria
 3. **Clear Filters**: Click "Clear All" to reset all filters and see all stocks
-4. **Review Results**: The results table shows all matching stocks with their key financial metrics
+4. **Refresh Data**: Click "Refresh Data" to fetch the latest data from Twelve Data API
+5. **Review Results**: The results table shows all matching stocks with their key financial metrics
 
 ## Technology Stack
 
 - **Frontend**: HTML5, CSS3, JavaScript (Vanilla)
+- **API Integration**: Twelve Data API for real-time stock data
+- **Data Sources**: Live financial data with intelligent fallback system
 - **Styling**: Custom CSS with modern design patterns
-- **Data**: Mock JSON data structure (easily replaceable with real API)
+- **Architecture**: Modular design with separate configuration and API service modules
 
 ## Future Enhancements
 
-- Integration with real financial data APIs (Alpha Vantage, Financial Modeling Prep, etc.)
 - Additional filtering criteria (dividend yield, revenue growth, etc.)
 - Stock charts and detailed company information
 - Save and load custom screening profiles
 - Export filtered results to CSV/Excel
+- Watchlist functionality
+- Portfolio tracking capabilities
