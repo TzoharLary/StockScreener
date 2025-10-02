@@ -10,6 +10,20 @@ No installation required! Just visit the link and enter your free Twelve Data AP
 
 ## Features
 
+### 🏠 Professional Landing Page
+- **Dual Entry Options**: Choose between Demo Mode or Full Version with API key
+- **Easy Onboarding**: Step-by-step guide for obtaining free Twelve Data API key
+- **Auto-Recognition**: Automatically logs in returning users based on stored preferences
+
+### 🔐 API Key Management
+- **Secure Storage**: API keys stored locally in browser (localStorage)
+- **Flexible Modes**: 
+  - **Demo Mode**: Explore with sample data (no API key needed)
+  - **Full Mode**: Access live data with your API key
+- **Settings Panel**: Manage API key through convenient gear icon (⚙️)
+- **Privacy**: Masked API key display for security
+
+### 📈 Advanced Stock Screening
 - **Interactive Stock Filtering**: Filter stocks by multiple criteria including:
   - Market Cap (Small, Mid, Large cap)
   - P/E Ratio (Price-to-Earnings)
@@ -19,8 +33,32 @@ No installation required! Just visit the link and enter your free Twelve Data AP
   - Sector (Technology, Healthcare, Financial, Consumer, Energy, Industrial)
 
 - **Real-time Results**: See filtered results instantly as you apply criteria
-- **Responsive Design**: Works on desktop and mobile devices
+- **Smart Autocomplete**: Search by company name or ticker symbol with intelligent suggestions
+- **Responsive Design**: Works seamlessly on desktop, tablet, and mobile devices
 - **Clean Interface**: Modern, user-friendly design with clear data presentation
+
+### 🔍 Detailed Stock View
+Click any stock row to view comprehensive information:
+- **Fundamentals Tab**: Market Cap, P/E Ratio, P/B Ratio, ROE, Debt/Equity, EPS, Dividend Yield
+- **Financial Metrics Tab**: Revenue, Net Income, Operating/Profit Margins, Growth Rates, Cash Flow
+- **Company Profile Tab**: Company information, sector, industry, exchange, country, description
+- **Quick Actions**: Add to watchlist directly from the detail view
+
+### ⭐ Watchlist Management
+- **Multiple Watchlists**: Create unlimited custom watchlists with names and descriptions
+- **Quick Access**: Floating star button (⭐) for instant watchlist management
+- **Personalization**: Add personal notes to stocks in your watchlists
+- **Organized View**: Grid layout showing all watchlists with stock counts
+- **Actions**: Add/remove stocks, delete watchlists, view details
+- **Persistent Storage**: All watchlists saved locally and persist across sessions
+- **Toast Notifications**: Real-time feedback for all watchlist actions
+
+### 🎨 Modern UI/UX
+- **Smooth Animations**: Polished transitions, loading states, and hover effects
+- **Professional Design**: Gradient themes, card layouts, and modern styling
+- **Accessibility**: ARIA labels, keyboard navigation, screen reader support
+- **Mobile-First**: Fully responsive design that works on all devices
+- **Loading States**: Spinner animations and skeleton screens for better UX
 
 ## Live Data Integration
 
@@ -98,6 +136,28 @@ If you want to run the application locally or contribute to development:
    When the application loads, enter your API key in the modal that appears.
 
 **Note**: The API key is stored in your browser's localStorage. You don't need to edit any files!
+
+## Project Structure
+
+```
+StockScreener/
+├── index.html              # Landing page with Demo/Full Version options
+├── app.html                # Main application interface
+├── config.js               # Configuration (API keys, settings, default stocks)
+├── api-service.js          # Twelve Data API service class
+├── errors.js               # Custom error classes
+├── utils.js                # Utility functions
+├── styles.css              # Main application styles
+├── css/
+│   ├── landing.css         # Landing page styles
+│   └── components.css      # Component styles (modals, watchlists, etc.)
+├── js/
+│   ├── storage-service.js  # localStorage management
+│   ├── watchlist-manager.js # Watchlist functionality
+│   └── stock-details.js    # Stock details view
+├── package.json            # Project metadata and scripts
+└── README.md               # Documentation
+```
 
 ## Usage
 
