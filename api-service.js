@@ -25,16 +25,32 @@ class TwelveDataService {
         }
 
         if (this.isCacheValid(symbol)) {
+            console.log(`Using cached data for ${symbol}`);
             return this.cache.get(symbol);
         }
 
         try {
+            console.log(`Fetching fresh data for ${symbol} from Twelve Data API...`);
             const data = await this.fetchStockData(symbol);
             this.cache.set(symbol, data);
             this.cacheTimestamps.set(symbol, Date.now());
+            
+            // If data appears invalid (all zeros), warn and suggest fallback
+            if (data.price === 0 && data.marketCap === 0 && data.peRatio === 0) {
+                console.warn(`⚠️  API returned invalid data for ${symbol}. This could be due to:`);
+                console.warn(`   - Rate limiting (free tier: 8 calls/min, 800/day)`);
+                console.warn(`   - Symbol not found`);
+                console.warn(`   - API endpoint format mismatch`);
+                console.warn(`   Using fallback data instead...`);
+                const fallback = this.getFallbackData(symbol);
+                this.cache.set(symbol, fallback);
+                return fallback;
+            }
+            
             return data;
         } catch (error) {
             console.error(`Error fetching data for ${symbol}:`, error);
+            console.log(`Falling back to cached/static data for ${symbol}`);
             return this.getFallbackData(symbol);
         }
     }
@@ -43,24 +59,27 @@ class TwelveDataService {
     async fetchStockData(symbol) {
         const endpoints = {
             quote: `${this.baseUrl}/quote?symbol=${symbol}&apikey=${this.apiKey}`,
-            fundamentals: `${this.baseUrl}/fundamentals?symbol=${symbol}&apikey=${this.apiKey}`,
+            fundamentals: `${this.baseUrl}/statistics?symbol=${symbol}&apikey=${this.apiKey}`,
             profile: `${this.baseUrl}/profile?symbol=${symbol}&apikey=${this.apiKey}`
         };
 
         try {
             // Fetch data from multiple endpoints in parallel
-            const [quoteResponse, fundamentalsResponse, profileResponse] = await Promise.all([
+            const [quoteResponse, statisticsResponse, profileResponse] = await Promise.all([
                 this.fetchWithTimeout(endpoints.quote),
                 this.fetchWithTimeout(endpoints.fundamentals),
                 this.fetchWithTimeout(endpoints.profile)
             ]);
 
             const quote = await quoteResponse.json();
-            const fundamentals = await fundamentalsResponse.json();
+            const statistics = await statisticsResponse.json();
             const profile = await profileResponse.json();
 
+            // Log responses for debugging
+            console.log(`API responses for ${symbol}:`, { quote, statistics, profile });
+
             // Combine data into our required format
-            return this.formatStockData(symbol, quote, fundamentals, profile);
+            return this.formatStockData(symbol, quote, statistics, profile);
         } catch (error) {
             throw new Error(`Failed to fetch data for ${symbol}: ${error.message}`);
         }
@@ -115,53 +134,143 @@ class TwelveDataService {
     }
 
     // Format API response data to match our application structure
-    formatStockData(symbol, quote, fundamentals, profile) {
+    formatStockData(symbol, quote, statistics, profile) {
         // Log raw API responses for debugging
         console.log(`Formatting data for ${symbol}:`, {
             quote: quote,
-            fundamentals: fundamentals,
+            statistics: statistics,
             profile: profile
         });
 
         // Check if API returned error messages
-        if (quote?.status === 'error' || fundamentals?.status === 'error' || profile?.status === 'error') {
+        if (quote?.status === 'error' || statistics?.status === 'error' || profile?.status === 'error') {
             console.warn(`API returned error for ${symbol}:`, {
                 quoteError: quote?.message,
-                fundamentalsError: fundamentals?.message,
+                statisticsError: statistics?.message,
                 profileError: profile?.message
             });
         }
 
+        // Extract price from quote - handle multiple possible field names
+        const price = parseFloat(
+            quote?.close || 
+            quote?.price || 
+            quote?.regularMarketPrice ||
+            quote?.last_price ||
+            0
+        );
+
+        // Extract market cap - try multiple sources
+        const marketCap = this.calculateMarketCap(quote, statistics, profile);
+
+        // Extract P/E ratio - try multiple paths
+        const peRatio = parseFloat(
+            statistics?.valuations_metrics?.pe_ratio ||
+            statistics?.valuation?.pe_ratio ||
+            statistics?.pe_ratio ||
+            statistics?.statistics?.valuation?.trailingPE ||
+            quote?.pe_ratio ||
+            0
+        );
+
+        // Extract P/B ratio - try multiple paths
+        const pbRatio = parseFloat(
+            statistics?.valuations_metrics?.pb_ratio ||
+            statistics?.valuation?.pb_ratio ||
+            statistics?.pb_ratio ||
+            statistics?.statistics?.valuation?.priceToBook ||
+            0
+        );
+
+        // Extract debt to equity ratio - try multiple paths
+        const debtToEquity = parseFloat(
+            statistics?.balance_sheet?.debt_to_equity ||
+            statistics?.financials?.balance_sheet?.debt_to_equity ||
+            statistics?.debt_to_equity ||
+            statistics?.statistics?.financial_data?.debtToEquity ||
+            0
+        );
+
+        // Extract ROE - try multiple paths
+        const roe = parseFloat(
+            statistics?.income_statement?.roe ||
+            statistics?.financials?.income_statement?.roe ||
+            statistics?.roe ||
+            statistics?.statistics?.financial_data?.returnOnEquity ||
+            0
+        );
+
+        // Extract revenue growth - try multiple paths
+        const revenueGrowth = parseFloat(
+            statistics?.income_statement?.revenue_growth ||
+            statistics?.financials?.income_statement?.revenue_growth ||
+            statistics?.revenue_growth ||
+            statistics?.statistics?.earnings?.revenueGrowth ||
+            0
+        );
+
         const formattedData = {
             symbol: symbol,
-            name: profile?.name || quote?.name || `${symbol} Inc.`,
-            price: parseFloat(quote?.close || quote?.price || 0),
-            marketCap: this.calculateMarketCap(quote, fundamentals),
-            peRatio: parseFloat(fundamentals?.valuations_metrics?.pe_ratio || fundamentals?.pe_ratio || 0),
-            pbRatio: parseFloat(fundamentals?.valuations_metrics?.pb_ratio || fundamentals?.pb_ratio || 0),
-            debtToEquity: parseFloat(fundamentals?.balance_sheet?.debt_to_equity || fundamentals?.debt_to_equity || 0),
-            roe: parseFloat(fundamentals?.income_statement?.roe || fundamentals?.roe || 0),
-            sector: profile?.sector || this.guessSector(symbol),
-            revenueGrowth: parseFloat(fundamentals?.income_statement?.revenue_growth || fundamentals?.revenue_growth || 0),
-            revenueGrowthYears: parseInt(fundamentals?.income_statement?.consistent_growth_years || fundamentals?.consistent_growth_years || 1)
+            name: profile?.name || quote?.name || profile?.longName || `${symbol} Inc.`,
+            price: price,
+            marketCap: marketCap,
+            peRatio: peRatio,
+            pbRatio: pbRatio,
+            debtToEquity: debtToEquity,
+            roe: roe,
+            sector: profile?.sector || profile?.industry || this.guessSector(symbol),
+            revenueGrowth: revenueGrowth,
+            revenueGrowthYears: parseInt(
+                statistics?.income_statement?.consistent_growth_years || 
+                statistics?.consistent_growth_years || 
+                1
+            )
         };
 
         console.log(`Formatted data for ${symbol}:`, formattedData);
+        
+        // If all critical values are 0, log a warning
+        if (formattedData.price === 0 && formattedData.marketCap === 0 && formattedData.peRatio === 0) {
+            console.warn(`Warning: All values are 0 for ${symbol}. API may have returned unexpected format or is rate limited.`);
+            console.warn(`Consider using fallback data or checking API response structure.`);
+        }
+        
         return formattedData;
     }
 
     // Calculate market cap from available data
-    calculateMarketCap(quote, fundamentals) {
-        const price = parseFloat(quote?.close || quote?.price || 0);
-        const sharesOutstanding = parseFloat(fundamentals?.statistics?.shares_outstanding ||
-                                           fundamentals?.shares_outstanding || 0);
+    calculateMarketCap(quote, statistics, profile) {
+        // Try to calculate from price * shares outstanding
+        const price = parseFloat(
+            quote?.close || 
+            quote?.price || 
+            quote?.regularMarketPrice ||
+            quote?.last_price ||
+            0
+        );
+        
+        const sharesOutstanding = parseFloat(
+            statistics?.statistics?.shares_outstanding ||
+            statistics?.shares_outstanding ||
+            profile?.shares_outstanding ||
+            quote?.shares_outstanding ||
+            0
+        );
 
         if (price > 0 && sharesOutstanding > 0) {
             return price * sharesOutstanding;
         }
 
-        // Fallback to market cap if directly available
-        return parseFloat(fundamentals?.market_cap || 0);
+        // Try to get market cap directly from various sources
+        const directMarketCap = parseFloat(
+            statistics?.market_cap ||
+            statistics?.statistics?.market_cap ||
+            profile?.market_cap ||
+            quote?.market_cap ||
+            0
+        );
+
+        return directMarketCap;
     }
 
     // Fallback sector guessing based on symbol (basic mapping)
