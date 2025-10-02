@@ -36,3 +36,4 @@ secrets.js
 
 # Test files (development only)
 test-*.html
+test-*.js
