@@ -492,20 +492,37 @@
         height: 100vh;
         max-height: 100vh;
         border-radius: 0;
+        padding: 16px;
     }
 
     .stock-header {
         flex-direction: column;
-        gap: 1rem;
+        gap: 16px;
+    }
+    
+    .stock-symbol-large {
+        font-size: 24px;
+    }
+    
+    .stock-name-large {
+        font-size: 14px;
     }
 
     .stock-price-large {
         text-align: left;
     }
+    
+    .stock-price-large .price {
+        font-size: 24px;
+    }
+    
+    .stock-price-large .change {
+        font-size: 14px;
+    }
 
     .metrics-grid {
         grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-        gap: 1rem;
+        gap: 12px;
     }
 
     .watchlists-grid {
@@ -519,13 +536,25 @@
 
     .tab-btn {
         flex-shrink: 0;
-        padding: 0.75rem 1rem;
-        font-size: 0.9rem;
+        padding: 12px 16px;
+        font-size: 12px;
     }
-
+    
+    .profile-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .stock-details-actions {
+        flex-direction: column;
+    }
+    
+    .stock-details-actions .btn {
+        width: 100%;
+    }
+    
     .stock-list-item {
         flex-direction: column;
-        gap: 1rem;
+        gap: 16px;
     }
 
     .stock-list-actions {
@@ -534,16 +563,17 @@
     }
 
     .toast {
-        bottom: 1rem;
-        right: 1rem;
-        left: 1rem;
+        bottom: 16px;
+        left: 16px;
+        right: 16px;
         max-width: none;
+        transform: translateX(0) translateY(100px);
     }
-
-    .stock-details-actions {
-        flex-direction: column;
+    
+    .toast.show {
+        transform: translateX(0) translateY(0);
     }
-
+}
     .stock-details-actions .btn {
         width: 100%;
     }
