@@ -1,4 +1,7 @@
-/* Landing Page Styles */
+/* Landing Page Styles - Material Design 3 */
+
+/* Import Roboto font */
+@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap');
 
 .landing-container {
     min-height: 100vh;
@@ -6,18 +9,18 @@
     flex-direction: column;
     justify-content: center;
     align-items: center;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    padding: 2rem;
+    background: linear-gradient(135deg, #6750A4 0%, #625B71 100%);
+    padding: 24px;
 }
 
 .landing-card {
-    background: white;
-    border-radius: 20px;
-    padding: 3rem;
+    background: #FFFBFE;
+    border-radius: 28px;
+    padding: 48px;
     max-width: 700px;
     width: 100%;
-    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-    animation: slideUp 0.6s ease-out;
+    box-shadow: 0px 8px 12px 6px rgba(0, 0, 0, 0.15), 0px 4px 4px rgba(0, 0, 0, 0.3);
+    animation: slideUp 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 @keyframes slideUp {
@@ -33,37 +36,41 @@
 
 .landing-header {
     text-align: center;
-    margin-bottom: 2.5rem;
+    margin-bottom: 40px;
 }
 
 .landing-title {
-    font-size: 2.5rem;
-    font-weight: 700;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    font-size: 45px;
+    font-weight: 400;
+    font-family: 'Roboto', sans-serif;
+    background: linear-gradient(135deg, #6750A4 0%, #625B71 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
-    margin-bottom: 0.5rem;
+    margin-bottom: 8px;
+    letter-spacing: 0;
 }
 
 .landing-subtitle {
-    font-size: 1.2rem;
-    color: #666;
+    font-size: 16px;
+    color: #49454F;
     font-weight: 400;
+    font-family: 'Roboto', sans-serif;
 }
 
 .features-list {
-    margin: 2rem 0;
+    margin: 32px 0;
     padding: 0;
     list-style: none;
 }
 
 .feature-item {
-    padding: 0.75rem 0;
-    font-size: 1.05rem;
-    color: #555;
+    padding: 12px 0;
+    font-size: 16px;
+    color: #49454F;
     display: flex;
     align-items: center;
+    font-family: 'Roboto', sans-serif;
 }
 
 .feature-item::before {
@@ -73,85 +80,91 @@
     justify-content: center;
     width: 24px;
     height: 24px;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, #6750A4 0%, #625B71 100%);
     color: white;
     border-radius: 50%;
-    margin-right: 1rem;
-    font-weight: bold;
+    margin-right: 16px;
+    font-weight: 500;
     flex-shrink: 0;
 }
 
 .landing-actions {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 1.5rem;
-    margin-top: 2.5rem;
+    gap: 16px;
+    margin-top: 40px;
 }
 
 .landing-btn {
-    padding: 1.2rem 1.5rem;
+    padding: 16px 24px;
     border: none;
-    border-radius: 10px;
-    font-size: 1.1rem;
-    font-weight: 600;
+    border-radius: 20px;
+    font-size: 14px;
+    font-weight: 500;
+    font-family: 'Roboto', sans-serif;
     cursor: pointer;
-    transition: all 0.3s ease;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
     text-align: center;
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 0.5rem;
+    gap: 8px;
+    min-height: 48px;
+    text-transform: uppercase;
+    letter-spacing: 0.1px;
 }
 
 .landing-btn-primary {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    color: white;
-    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+    background: #6750A4;
+    color: #FFFFFF;
+    box-shadow: 0px 1px 2px rgba(0, 0, 0, 0.3), 0px 1px 3px 1px rgba(0, 0, 0, 0.15);
 }
 
 .landing-btn-primary:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 6px 20px rgba(102, 126, 234, 0.5);
+    box-shadow: 0px 1px 2px rgba(0, 0, 0, 0.3), 0px 2px 6px 2px rgba(0, 0, 0, 0.15);
+    background: color-mix(in srgb, #6750A4 92%, white);
 }
 
 .landing-btn-secondary {
-    background: #f8f9fa;
-    color: #555;
-    border: 2px solid #e1e1e1;
+    background: transparent;
+    color: #6750A4;
+    border: 1px solid #79747E;
 }
 
 .landing-btn-secondary:hover {
-    background: #e9ecef;
-    border-color: #667eea;
-    transform: translateY(-3px);
+    background: #E8DEF8;
+    border-color: #79747E;
 }
 
 .btn-icon {
-    font-size: 1.8rem;
+    font-size: 28px;
 }
 
 .btn-text {
-    font-size: 1rem;
+    font-size: 14px;
+    font-weight: 500;
 }
 
 .btn-subtext {
-    font-size: 0.85rem;
+    font-size: 12px;
     font-weight: 400;
     opacity: 0.8;
+    text-transform: none;
 }
 
 /* Demo mode banner */
 .demo-banner {
     background: linear-gradient(135deg, #ffa500 0%, #ff6347 100%);
     color: white;
-    padding: 1rem 2rem;
+    padding: 16px 32px;
     text-align: center;
-    font-weight: 600;
+    font-weight: 500;
+    font-family: 'Roboto', sans-serif;
     position: sticky;
     top: 0;
     z-index: 1000;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-    animation: slideDown 0.5s ease-out;
+    box-shadow: 0px 1px 2px rgba(0, 0, 0, 0.3), 0px 1px 3px 1px rgba(0, 0, 0, 0.15);
+    animation: slideDown 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 @keyframes slideDown {
@@ -177,15 +190,15 @@
 /* Mobile responsive */
 @media (max-width: 768px) {
     .landing-card {
-        padding: 2rem;
+        padding: 32px;
     }
 
     .landing-title {
-        font-size: 2rem;
+        font-size: 32px;
     }
 
     .landing-subtitle {
-        font-size: 1rem;
+        font-size: 14px;
     }
 
     .landing-actions {
@@ -193,42 +206,44 @@
     }
 
     .feature-item {
-        font-size: 0.95rem;
+        font-size: 14px;
     }
 }
 
 /* Welcome back banner */
 .welcome-banner {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, #6750A4 0%, #625B71 100%);
     color: white;
-    padding: 0.75rem 1.5rem;
+    padding: 12px 24px;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    font-size: 0.9rem;
+    font-size: 14px;
+    font-family: 'Roboto', sans-serif;
 }
 
 .welcome-text {
     display: flex;
     align-items: center;
-    gap: 0.5rem;
+    gap: 8px;
 }
 
 .api-key-display {
-    font-family: 'Courier New', monospace;
+    font-family: 'Roboto Mono', 'Courier New', monospace;
     background: rgba(255, 255, 255, 0.2);
-    padding: 0.25rem 0.75rem;
+    padding: 4px 12px;
     border-radius: 4px;
 }
 
 .settings-link {
     color: white;
     text-decoration: none;
-    padding: 0.5rem 1rem;
+    padding: 8px 16px;
     border: 1px solid white;
-    border-radius: 5px;
-    transition: all 0.3s ease;
+    border-radius: 20px;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
     cursor: pointer;
+    font-weight: 500;
 }
 
 .settings-link:hover {
