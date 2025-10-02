@@ -4,11 +4,25 @@
 
 const CONFIG = {
     // Twelve Data API Configuration
-    // Option 1: Use environment variable (recommended for production)
-    // Option 2: Set directly here (for local development only - don't commit!)
-    TWELVE_DATA_API_KEY: typeof process !== 'undefined' && process.env.TWELVE_DATA_API_KEY 
-        ? process.env.TWELVE_DATA_API_KEY 
-        : 'demo',  // Use 'demo' for limited testing, replace with your key
+    // Priority order for API key:
+    // 1. localStorage (user-provided via UI)
+    // 2. Environment variable (for Node.js environments)
+    // 3. Demo key (fallback for testing)
+    get TWELVE_DATA_API_KEY() {
+        // Check localStorage first (browser environment)
+        if (typeof localStorage !== 'undefined') {
+            const storedKey = localStorage.getItem('twelvedata_api_key');
+            if (storedKey && storedKey !== 'demo') {
+                return storedKey;
+            }
+        }
+        // Check environment variable (Node.js)
+        if (typeof process !== 'undefined' && process.env.TWELVE_DATA_API_KEY) {
+            return process.env.TWELVE_DATA_API_KEY;
+        }
+        // Fallback to demo
+        return 'demo';
+    },
     TWELVE_DATA_BASE_URL: 'https://api.twelvedata.com',
     
     // Default stocks to fetch data for

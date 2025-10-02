@@ -2,6 +2,12 @@
 
 A web application for screening stocks based on fundamental parameters. This application allows users to filter stocks by various financial metrics such as P/E ratio, market capitalization, debt-to-equity ratio, return on equity (ROE), and sector.
 
+## 🚀 Live Demo
+
+**Try it now: [https://tzoharlary.github.io/StockScreener/](https://tzoharlary.github.io/StockScreener/)**
+
+No installation required! Just visit the link and enter your free Twelve Data API key to start screening stocks.
+
 ## Features
 
 - **Interactive Stock Filtering**: Filter stocks by multiple criteria including:
@@ -38,32 +44,45 @@ The application is integrated with **Twelve Data API** to provide real-time stoc
 
 ## Getting Started
 
-### Prerequisites
+### Quick Start (Recommended)
 
-1. **Get a Twelve Data API Key** (Required for live data):
+**Use the live demo - no installation needed!**
+
+1. **Visit the live application**: [https://tzoharlary.github.io/StockScreener/](https://tzoharlary.github.io/StockScreener/)
+
+2. **Get your free API key**:
+   - Visit [https://twelvedata.com/](https://twelvedata.com/)
+   - Sign up for a free account (takes 1 minute)
+   - Get your API key from the dashboard
+   - Free tier includes 800 API credits per day
+
+3. **Enter your API key**:
+   - When you first visit the app, you'll see a welcome modal
+   - Paste your API key and click "Save API Key"
+   - Your key is stored securely in your browser's localStorage
+   - Start screening stocks immediately!
+
+4. **Update your API key anytime**:
+   - Click the ⚙️ settings button (bottom-right corner)
+   - Enter a new API key or switch to demo mode
+
+### Developer Setup (Local Development)
+
+If you want to run the application locally or contribute to development:
+
+1. **Clone or download this repository**
+
+2. **Get a Twelve Data API Key**:
    - Visit [https://twelvedata.com/](https://twelvedata.com/)
    - Sign up for a free account
    - Get your API key from the dashboard
    - Free tier includes 800 API credits per day
 
-### Setup Instructions
-
-1. **Clone or download this repository**
-
-2. **Configure your API key**:
-   ```bash
-   # Copy the example configuration file
-   cp config.example.js config.js
-   
-   # Edit config.js and replace 'YOUR_API_KEY_HERE' with your actual API key
-   ```
-
-   **Important**: Never commit your `config.js` file with your API key to version control!
-
 3. **Run the application**:
 
    **Option 1: Direct Browser Access**
    - Simply open `index.html` in your web browser
+   - Enter your API key when prompted
 
    **Option 2: Local Server (Recommended)**
    ```bash
@@ -76,12 +95,9 @@ The application is integrated with **Twelve Data API** to provide real-time stoc
    # Then open http://localhost:8000 in your browser
    ```
 
-### First-Time Setup Checklist
-- [ ] Get Twelve Data API key
-- [ ] Copy `config.example.js` to `config.js`
-- [ ] Add your API key to `config.js`
-- [ ] Verify `config.js` is listed in `.gitignore`
-- [ ] Start the application
+   When the application loads, enter your API key in the modal that appears.
+
+**Note**: The API key is stored in your browser's localStorage. You don't need to edit any files!
 
 ## Usage
 
