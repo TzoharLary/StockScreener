@@ -116,7 +116,23 @@ class TwelveDataService {
 
     // Format API response data to match our application structure
     formatStockData(symbol, quote, fundamentals, profile) {
-        return {
+        // Log raw API responses for debugging
+        console.log(`Formatting data for ${symbol}:`, {
+            quote: quote,
+            fundamentals: fundamentals,
+            profile: profile
+        });
+
+        // Check if API returned error messages
+        if (quote?.status === 'error' || fundamentals?.status === 'error' || profile?.status === 'error') {
+            console.warn(`API returned error for ${symbol}:`, {
+                quoteError: quote?.message,
+                fundamentalsError: fundamentals?.message,
+                profileError: profile?.message
+            });
+        }
+
+        const formattedData = {
             symbol: symbol,
             name: profile?.name || quote?.name || `${symbol} Inc.`,
             price: parseFloat(quote?.close || quote?.price || 0),
@@ -129,6 +145,9 @@ class TwelveDataService {
             revenueGrowth: parseFloat(fundamentals?.income_statement?.revenue_growth || fundamentals?.revenue_growth || 0),
             revenueGrowthYears: parseInt(fundamentals?.income_statement?.consistent_growth_years || fundamentals?.consistent_growth_years || 1)
         };
+
+        console.log(`Formatted data for ${symbol}:`, formattedData);
+        return formattedData;
     }
 
     // Calculate market cap from available data
@@ -157,7 +176,8 @@ class TwelveDataService {
             'V': 'Financial',
             'PG': 'Consumer',
             'XOM': 'Energy',
-            'HD': 'Consumer'
+            'HD': 'Consumer',
+            'NVDA': 'Technology'
         };
         return sectorMap[symbol] || 'Technology';
     }
@@ -174,7 +194,8 @@ class TwelveDataService {
             'V': { symbol: 'V', name: 'Visa Inc.', price: 258.73, marketCap: 544000000000, peRatio: 31.2, pbRatio: 13.4, debtToEquity: 0.36, roe: 38.7, sector: 'Financial', revenueGrowth: 9.7, revenueGrowthYears: 3 },
             'PG': { symbol: 'PG', name: 'Procter & Gamble', price: 155.21, marketCap: 369000000000, peRatio: 26.1, pbRatio: 7.8, debtToEquity: 0.54, roe: 29.9, sector: 'Consumer', revenueGrowth: 5.2, revenueGrowthYears: 2 },
             'XOM': { symbol: 'XOM', name: 'Exxon Mobil Corporation', price: 104.65, marketCap: 441000000000, peRatio: 14.3, pbRatio: 1.9, debtToEquity: 0.25, roe: 17.5, sector: 'Energy', revenueGrowth: 15.8, revenueGrowthYears: 1 },
-            'HD': { symbol: 'HD', name: 'The Home Depot Inc.', price: 327.89, marketCap: 333000000000, peRatio: 24.7, pbRatio: 45.2, debtToEquity: 14.8, roe: 132.4, sector: 'Consumer', revenueGrowth: 7.4, revenueGrowthYears: 4 }
+            'HD': { symbol: 'HD', name: 'The Home Depot Inc.', price: 327.89, marketCap: 333000000000, peRatio: 24.7, pbRatio: 45.2, debtToEquity: 14.8, roe: 132.4, sector: 'Consumer', revenueGrowth: 7.4, revenueGrowthYears: 4 },
+            'NVDA': { symbol: 'NVDA', name: 'NVIDIA Corporation', price: 487.84, marketCap: 1200000000000, peRatio: 67.8, pbRatio: 47.3, debtToEquity: 0.42, roe: 71.2, sector: 'Technology', revenueGrowth: 125.9, revenueGrowthYears: 5 }
         };
 
         return fallbackData[symbol] || {
