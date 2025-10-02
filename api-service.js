@@ -18,6 +18,12 @@ class TwelveDataService {
 
     // Get cached data or fetch new data
     async getStockData(symbol) {
+        // If using demo API key, return fallback data directly
+        if (this.apiKey === 'demo') {
+            console.log(`Using demo mode - returning fallback data for ${symbol}`);
+            return this.getFallbackData(symbol);
+        }
+
         if (this.isCacheValid(symbol)) {
             return this.cache.get(symbol);
         }
@@ -73,9 +79,9 @@ class TwelveDataService {
                     'User-Agent': 'StockScreener/1.0'
                 }
             });
-            
+
             clearTimeout(timeoutId);
-            
+
             if (!response.ok) {
                 const errorMessage = `HTTP ${response.status}: ${response.statusText}`;
                 if (typeof APIError !== 'undefined') {
@@ -83,19 +89,19 @@ class TwelveDataService {
                 }
                 throw new Error(errorMessage);
             }
-            
+
             return response;
         } catch (error) {
             clearTimeout(timeoutId);
-            
+
             // Handle abort/timeout
             if (error.name === 'AbortError') {
-                const timeoutError = typeof TimeoutError !== 'undefined' 
+                const timeoutError = typeof TimeoutError !== 'undefined'
                     ? new TimeoutError('Request timed out', error)
                     : new Error('Request timed out');
                 throw timeoutError;
             }
-            
+
             // Handle network errors
             if (error instanceof TypeError && error.message.includes('fetch')) {
                 const networkError = typeof NetworkError !== 'undefined'
@@ -103,7 +109,7 @@ class TwelveDataService {
                     : new Error('Network request failed');
                 throw networkError;
             }
-            
+
             throw error;
         }
     }
@@ -128,13 +134,13 @@ class TwelveDataService {
     // Calculate market cap from available data
     calculateMarketCap(quote, fundamentals) {
         const price = parseFloat(quote?.close || quote?.price || 0);
-        const sharesOutstanding = parseFloat(fundamentals?.statistics?.shares_outstanding || 
+        const sharesOutstanding = parseFloat(fundamentals?.statistics?.shares_outstanding ||
                                            fundamentals?.shares_outstanding || 0);
-        
+
         if (price > 0 && sharesOutstanding > 0) {
             return price * sharesOutstanding;
         }
-        
+
         // Fallback to market cap if directly available
         return parseFloat(fundamentals?.market_cap || 0);
     }
@@ -190,7 +196,7 @@ class TwelveDataService {
     async fetchMultipleStocks(symbols = CONFIG.DEFAULT_STOCKS) {
         const promises = symbols.map(symbol => this.getStockData(symbol));
         const results = await Promise.allSettled(promises);
-        
+
         return results.map((result, index) => {
             if (result.status === 'fulfilled') {
                 return result.value;
@@ -207,14 +213,20 @@ class TwelveDataService {
             return [];
         }
 
+        // If using demo API key, return fallback search results directly
+        if (this.apiKey === 'demo') {
+            console.log(`Using demo mode - returning fallback search results for "${query}"`);
+            return this.getFallbackSearchResults(query);
+        }
+
         try {
             const url = `${this.baseUrl}/symbol_search?symbol=${encodeURIComponent(query)}&apikey=${this.apiKey}`;
             const response = await this.fetchWithTimeout(url);
             const data = await response.json();
-            
+
             // Handle different possible response formats
             const results = data.data || data.result || data;
-            
+
             if (Array.isArray(results)) {
                 return results.slice(0, 10).map(item => ({
                     symbol: item.symbol || item.ticker || item.code,
@@ -223,7 +235,7 @@ class TwelveDataService {
                     type: item.instrument_type || item.type || 'Common Stock'
                 }));
             }
-            
+
             return [];
         } catch (error) {
             console.warn(`Symbol search failed for "${query}":`, error);
@@ -263,7 +275,7 @@ class TwelveDataService {
 
         const queryLower = query.toLowerCase();
         return allSymbols
-            .filter(stock => 
+            .filter(stock =>
                 stock.symbol.toLowerCase().includes(queryLower) ||
                 stock.name.toLowerCase().includes(queryLower)
             )

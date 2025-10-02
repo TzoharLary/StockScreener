@@ -44,11 +44,11 @@ function getUserFriendlyErrorMessage(error) {
     if (error instanceof TimeoutError) {
         return 'Request timed out. Please check your connection and try again.';
     }
-    
+
     if (error instanceof NetworkError) {
         return 'Network error. Please check your internet connection.';
     }
-    
+
     if (error instanceof APIError) {
         if (error.statusCode === 429) {
             return 'API rate limit exceeded. Please try again in a few minutes.';
@@ -61,11 +61,11 @@ function getUserFriendlyErrorMessage(error) {
         }
         return `API error: ${error.message}`;
     }
-    
+
     if (error instanceof ValidationError) {
         return `Validation error: ${error.message}`;
     }
-    
+
     return 'An unexpected error occurred. Please try again.';
 }
 
