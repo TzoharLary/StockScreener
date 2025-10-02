@@ -338,6 +338,46 @@
     </style>
 </head>
 <body>
+    <!-- API Key Modal -->
+    <div id="apiKeyModal" class="modal-overlay" role="dialog" aria-labelledby="modalTitle" aria-modal="true">
+        <div class="modal">
+            <div class="modal-header">
+                <h2 id="modalTitle">Welcome to Stock Screener</h2>
+                <button class="modal-close" onclick="closeApiKeyModal()" aria-label="Close modal">&times;</button>
+            </div>
+            <div class="modal-content">
+                <p>To use this application, you'll need a <strong>free API key</strong> from Twelve Data.</p>
+                
+                <div class="info-box">
+                    <p><strong>How to get your free API key:</strong></p>
+                    <p>1. Visit <a href="https://twelvedata.com/" target="_blank" rel="noopener noreferrer">twelvedata.com</a></p>
+                    <p>2. Sign up for a free account</p>
+                    <p>3. Copy your API key from the dashboard</p>
+                    <p>4. Paste it below</p>
+                    <p style="margin-top: 0.5rem;"><small>Free tier includes 800 API credits per day!</small></p>
+                </div>
+                
+                <div class="modal-input-group">
+                    <label for="apiKeyInput">Enter your API key:</label>
+                    <input 
+                        type="text" 
+                        id="apiKeyInput" 
+                        placeholder="Your Twelve Data API key"
+                        aria-label="API key input"
+                        autocomplete="off">
+                    <div class="help-text">Your API key will be stored securely in your browser</div>
+                </div>
+            </div>
+            <div class="modal-actions">
+                <button class="btn btn-secondary" onclick="useDemoMode()">Use Demo Mode</button>
+                <button class="btn btn-primary" onclick="saveApiKey()">Save API Key</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Settings Button -->
+    <button class="settings-button" onclick="openApiKeyModal()" aria-label="API Key Settings" title="Manage API Key">⚙️</button>
+
     <main class="container">
         <header class="header">
             <h1>Stock Screener</h1>
@@ -480,6 +520,90 @@
     <script src="errors.js"></script>
     <script src="utils.js"></script>
     <script src="api-service.js"></script>
+    
+    <script>
+        // API Key Management
+        function checkApiKey() {
+            const apiKey = localStorage.getItem('twelvedata_api_key');
+            if (!apiKey || apiKey === 'demo') {
+                // Show modal on first visit
+                openApiKeyModal();
+                return false;
+            }
+            return true;
+        }
+
+        function openApiKeyModal() {
+            const modal = document.getElementById('apiKeyModal');
+            modal.classList.add('show');
+            document.getElementById('apiKeyInput').focus();
+        }
+
+        function closeApiKeyModal() {
+            const modal = document.getElementById('apiKeyModal');
+            modal.classList.remove('show');
+        }
+
+        function saveApiKey() {
+            const apiKeyInput = document.getElementById('apiKeyInput');
+            const apiKey = apiKeyInput.value.trim();
+            
+            if (!apiKey) {
+                alert('Please enter an API key');
+                return;
+            }
+            
+            // Save to localStorage
+            localStorage.setItem('twelvedata_api_key', apiKey);
+            
+            // Close modal
+            closeApiKeyModal();
+            
+            // Reinitialize the API service with new key
+            window.apiService = new TwelveDataService();
+            
+            // Reload stock data
+            loadStockData();
+            
+            // Show success message
+            alert('API key saved successfully! Loading stock data...');
+        }
+
+        function useDemoMode() {
+            localStorage.setItem('twelvedata_api_key', 'demo');
+            closeApiKeyModal();
+            
+            // Reinitialize with demo key
+            window.apiService = new TwelveDataService();
+            loadStockData();
+            
+            alert('Using demo mode. Note: Demo mode has limited functionality.');
+        }
+
+        // Close modal when clicking outside
+        document.addEventListener('click', function(event) {
+            const modal = document.getElementById('apiKeyModal');
+            if (event.target === modal) {
+                // Don't close if API key is not set
+                const apiKey = localStorage.getItem('twelvedata_api_key');
+                if (apiKey && apiKey !== '') {
+                    closeApiKeyModal();
+                }
+            }
+        });
+
+        // Handle Enter key in API key input
+        document.addEventListener('DOMContentLoaded', function() {
+            const apiKeyInput = document.getElementById('apiKeyInput');
+            if (apiKeyInput) {
+                apiKeyInput.addEventListener('keypress', function(event) {
+                    if (event.key === 'Enter') {
+                        saveApiKey();
+                    }
+                });
+            }
+        });
+    </script>
     
     <script>
         // Autocomplete functionality
@@ -933,6 +1057,10 @@
         // Initialize the application
         document.addEventListener('DOMContentLoaded', function() {
             console.log('Stock Screener initializing with Twelve Data API...');
+            
+            // Check if API key exists
+            checkApiKey();
+            
             console.log('API Key configured:', CONFIG.TWELVE_DATA_API_KEY ? 'Yes' : 'No');
             
             // Initialize autocomplete with API service
