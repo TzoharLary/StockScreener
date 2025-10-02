@@ -38,21 +38,50 @@ The application is integrated with **Twelve Data API** to provide real-time stoc
 
 ## Getting Started
 
-### Option 1: Direct Browser Access
-Simply open `index.html` in your web browser to start using the stock screener.
+### Prerequisites
 
-### Option 2: Local Server
-To run with a local server (recommended for better performance):
+1. **Get a Twelve Data API Key** (Required for live data):
+   - Visit [https://twelvedata.com/](https://twelvedata.com/)
+   - Sign up for a free account
+   - Get your API key from the dashboard
+   - Free tier includes 800 API credits per day
 
-```bash
-# Using Python 3
-python3 -m http.server 8000
+### Setup Instructions
 
-# Or using Node.js
-npm start
+1. **Clone or download this repository**
 
-# Then open http://localhost:8000 in your browser
-```
+2. **Configure your API key**:
+   ```bash
+   # Copy the example configuration file
+   cp config.example.js config.js
+   
+   # Edit config.js and replace 'YOUR_API_KEY_HERE' with your actual API key
+   ```
+
+   **Important**: Never commit your `config.js` file with your API key to version control!
+
+3. **Run the application**:
+
+   **Option 1: Direct Browser Access**
+   - Simply open `index.html` in your web browser
+
+   **Option 2: Local Server (Recommended)**
+   ```bash
+   # Using Python 3
+   python3 -m http.server 8000
+
+   # Or using Node.js
+   npm start
+
+   # Then open http://localhost:8000 in your browser
+   ```
+
+### First-Time Setup Checklist
+- [ ] Get Twelve Data API key
+- [ ] Copy `config.example.js` to `config.js`
+- [ ] Add your API key to `config.js`
+- [ ] Verify `config.js` is listed in `.gitignore`
+- [ ] Start the application
 
 ## Usage
 

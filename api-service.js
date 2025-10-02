@@ -77,12 +77,33 @@ class TwelveDataService {
             clearTimeout(timeoutId);
             
             if (!response.ok) {
-                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                const errorMessage = `HTTP ${response.status}: ${response.statusText}`;
+                if (typeof APIError !== 'undefined') {
+                    throw new APIError(errorMessage, response.status);
+                }
+                throw new Error(errorMessage);
             }
             
             return response;
         } catch (error) {
             clearTimeout(timeoutId);
+            
+            // Handle abort/timeout
+            if (error.name === 'AbortError') {
+                const timeoutError = typeof TimeoutError !== 'undefined' 
+                    ? new TimeoutError('Request timed out', error)
+                    : new Error('Request timed out');
+                throw timeoutError;
+            }
+            
+            // Handle network errors
+            if (error instanceof TypeError && error.message.includes('fetch')) {
+                const networkError = typeof NetworkError !== 'undefined'
+                    ? new NetworkError('Network request failed', error)
+                    : new Error('Network request failed');
+                throw networkError;
+            }
+            
             throw error;
         }
     }

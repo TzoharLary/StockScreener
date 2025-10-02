@@ -1,14 +1,10 @@
 // Configuration file for Stock Screener
-// IMPORTANT: Keep your API key private and never commit it to version control
-// If you don't have an API key, get one free at: https://twelvedata.com/
+// Copy this file to config.js and add your API key
 
 const CONFIG = {
     // Twelve Data API Configuration
-    // Option 1: Use environment variable (recommended for production)
-    // Option 2: Set directly here (for local development only - don't commit!)
-    TWELVE_DATA_API_KEY: typeof process !== 'undefined' && process.env.TWELVE_DATA_API_KEY 
-        ? process.env.TWELVE_DATA_API_KEY 
-        : 'demo',  // Use 'demo' for limited testing, replace with your key
+    // Get your free API key at: https://twelvedata.com/
+    TWELVE_DATA_API_KEY: 'YOUR_API_KEY_HERE',
     TWELVE_DATA_BASE_URL: 'https://api.twelvedata.com',
     
     // Default stocks to fetch data for
