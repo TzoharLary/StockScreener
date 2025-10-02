@@ -1,4 +1,12 @@
 // Twelve Data API Service
+// Documentation: https://twelvedata.com/docs
+// This service uses the following endpoints:
+// - /quote - Real-time and historical stock quotes
+// - /statistics - Fundamental statistics and valuation metrics
+// - /profile - Company profile and sector information
+// - /symbol_search - Search for stock symbols
+// Rate limits (free tier): 8 calls/min, 800 calls/day
+// Attribution: "Data powered by Twelve Data API" is displayed in the UI
 class TwelveDataService {
     constructor() {
         this.apiKey = CONFIG.TWELVE_DATA_API_KEY;
@@ -34,19 +42,19 @@ class TwelveDataService {
             const data = await this.fetchStockData(symbol);
             this.cache.set(symbol, data);
             this.cacheTimestamps.set(symbol, Date.now());
-            
+
             // If data appears invalid (all zeros), warn and suggest fallback
             if (data.price === 0 && data.marketCap === 0 && data.peRatio === 0) {
                 console.warn(`⚠️  API returned invalid data for ${symbol}. This could be due to:`);
-                console.warn(`   - Rate limiting (free tier: 8 calls/min, 800/day)`);
-                console.warn(`   - Symbol not found`);
-                console.warn(`   - API endpoint format mismatch`);
-                console.warn(`   Using fallback data instead...`);
+                console.warn('   - Rate limiting (free tier: 8 calls/min, 800/day)');
+                console.warn('   - Symbol not found');
+                console.warn('   - API endpoint format mismatch');
+                console.warn('   Using fallback data instead...');
                 const fallback = this.getFallbackData(symbol);
                 this.cache.set(symbol, fallback);
                 return fallback;
             }
-            
+
             return data;
         } catch (error) {
             console.error(`Error fetching data for ${symbol}:`, error);
@@ -56,6 +64,8 @@ class TwelveDataService {
     }
 
     // Fetch comprehensive stock data from Twelve Data API
+    // Note: This method makes 3 parallel API calls (quote, statistics, profile)
+    // which counts as 3 calls against the rate limit (8/min, 800/day for free tier)
     async fetchStockData(symbol) {
         const endpoints = {
             quote: `${this.baseUrl}/quote?symbol=${symbol}&apikey=${this.apiKey}`,
@@ -95,14 +105,39 @@ class TwelveDataService {
                 signal: controller.signal,
                 headers: {
                     'Accept': 'application/json',
-                    'User-Agent': 'StockScreener/1.0'
+                    'User-Agent': 'StockScreener/1.0 (https://github.com/TzoharLary/StockScreener)'
                 }
             });
 
             clearTimeout(timeoutId);
 
             if (!response.ok) {
-                const errorMessage = `HTTP ${response.status}: ${response.statusText}`;
+                // Handle Twelve Data API specific error codes
+                let errorMessage = `HTTP ${response.status}: ${response.statusText}`;
+
+                // Try to get error details from response body
+                try {
+                    const errorData = await response.json();
+                    if (errorData.message) {
+                        errorMessage = errorData.message;
+                    } else if (errorData.error) {
+                        errorMessage = errorData.error;
+                    }
+                } catch (e) {
+                    // Response body is not JSON, use default error message
+                }
+
+                // Provide specific guidance for common Twelve Data error codes
+                if (response.status === 401) {
+                    errorMessage = 'Invalid API key. Please check your Twelve Data API key.';
+                } else if (response.status === 429) {
+                    errorMessage = 'Rate limit exceeded. Free tier allows 8 calls/min, 800 calls/day.';
+                } else if (response.status === 404) {
+                    errorMessage = 'Symbol not found or endpoint not available.';
+                } else if (response.status === 400) {
+                    errorMessage = 'Bad request. Please check the symbol or parameters.';
+                }
+
                 if (typeof APIError !== 'undefined') {
                     throw new APIError(errorMessage, response.status);
                 }
@@ -153,8 +188,8 @@ class TwelveDataService {
 
         // Extract price from quote - handle multiple possible field names
         const price = parseFloat(
-            quote?.close || 
-            quote?.price || 
+            quote?.close ||
+            quote?.price ||
             quote?.regularMarketPrice ||
             quote?.last_price ||
             0
@@ -221,20 +256,20 @@ class TwelveDataService {
             sector: profile?.sector || profile?.industry || this.guessSector(symbol),
             revenueGrowth: revenueGrowth,
             revenueGrowthYears: parseInt(
-                statistics?.income_statement?.consistent_growth_years || 
-                statistics?.consistent_growth_years || 
+                statistics?.income_statement?.consistent_growth_years ||
+                statistics?.consistent_growth_years ||
                 1
             )
         };
 
         console.log(`Formatted data for ${symbol}:`, formattedData);
-        
+
         // If all critical values are 0, log a warning
         if (formattedData.price === 0 && formattedData.marketCap === 0 && formattedData.peRatio === 0) {
             console.warn(`Warning: All values are 0 for ${symbol}. API may have returned unexpected format or is rate limited.`);
-            console.warn(`Consider using fallback data or checking API response structure.`);
+            console.warn('Consider using fallback data or checking API response structure.');
         }
-        
+
         return formattedData;
     }
 
@@ -242,13 +277,13 @@ class TwelveDataService {
     calculateMarketCap(quote, statistics, profile) {
         // Try to calculate from price * shares outstanding
         const price = parseFloat(
-            quote?.close || 
-            quote?.price || 
+            quote?.close ||
+            quote?.price ||
             quote?.regularMarketPrice ||
             quote?.last_price ||
             0
         );
-        
+
         const sharesOutstanding = parseFloat(
             statistics?.statistics?.shares_outstanding ||
             statistics?.shares_outstanding ||

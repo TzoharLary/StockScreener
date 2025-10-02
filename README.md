@@ -80,6 +80,23 @@ The application is integrated with **Twelve Data API** to provide real-time stoc
 - **Caching**: 5-minute cache to minimize API calls and improve performance
 - **Error Handling**: Robust error handling with informative user feedback
 
+### Twelve Data API Compliance
+This application follows Twelve Data API best practices:
+- **Attribution**: Displays "Data powered by Twelve Data API" in the UI (required for free tier)
+- **Rate Limiting**: Implements caching to respect rate limits (8 calls/min, 800 calls/day for free tier)
+- **Error Handling**: Provides specific error messages for common API errors (401, 429, 404, 400)
+- **HTTPS**: All API requests use HTTPS as required
+- **User-Agent**: Includes descriptive User-Agent header with project URL
+
+### Endpoints Used
+The following Twelve Data endpoints are used (all available in free tier):
+- `/quote` - Real-time stock quotes and prices
+- `/statistics` - Fundamental statistics (P/E, P/B, debt/equity, ROE, etc.)
+- `/profile` - Company profile information (name, sector, industry)
+- `/symbol_search` - Stock symbol search for autocomplete
+
+**Note**: Each stock lookup uses 3 API calls (quote + statistics + profile), so with the free tier limit of 8 calls/minute, you can fetch approximately 2 stocks per minute.
+
 ## Getting Started
 
 ### Quick Start (Recommended)
