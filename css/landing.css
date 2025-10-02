@@ -1,0 +1,236 @@
+/* Landing Page Styles */
+
+.landing-container {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    padding: 2rem;
+}
+
+.landing-card {
+    background: white;
+    border-radius: 20px;
+    padding: 3rem;
+    max-width: 700px;
+    width: 100%;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    animation: slideUp 0.6s ease-out;
+}
+
+@keyframes slideUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.landing-header {
+    text-align: center;
+    margin-bottom: 2.5rem;
+}
+
+.landing-title {
+    font-size: 2.5rem;
+    font-weight: 700;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-bottom: 0.5rem;
+}
+
+.landing-subtitle {
+    font-size: 1.2rem;
+    color: #666;
+    font-weight: 400;
+}
+
+.features-list {
+    margin: 2rem 0;
+    padding: 0;
+    list-style: none;
+}
+
+.feature-item {
+    padding: 0.75rem 0;
+    font-size: 1.05rem;
+    color: #555;
+    display: flex;
+    align-items: center;
+}
+
+.feature-item::before {
+    content: '✓';
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border-radius: 50%;
+    margin-right: 1rem;
+    font-weight: bold;
+    flex-shrink: 0;
+}
+
+.landing-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem;
+    margin-top: 2.5rem;
+}
+
+.landing-btn {
+    padding: 1.2rem 1.5rem;
+    border: none;
+    border-radius: 10px;
+    font-size: 1.1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.landing-btn-primary {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+}
+
+.landing-btn-primary:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 20px rgba(102, 126, 234, 0.5);
+}
+
+.landing-btn-secondary {
+    background: #f8f9fa;
+    color: #555;
+    border: 2px solid #e1e1e1;
+}
+
+.landing-btn-secondary:hover {
+    background: #e9ecef;
+    border-color: #667eea;
+    transform: translateY(-3px);
+}
+
+.btn-icon {
+    font-size: 1.8rem;
+}
+
+.btn-text {
+    font-size: 1rem;
+}
+
+.btn-subtext {
+    font-size: 0.85rem;
+    font-weight: 400;
+    opacity: 0.8;
+}
+
+/* Demo mode banner */
+.demo-banner {
+    background: linear-gradient(135deg, #ffa500 0%, #ff6347 100%);
+    color: white;
+    padding: 1rem 2rem;
+    text-align: center;
+    font-weight: 600;
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    animation: slideDown 0.5s ease-out;
+}
+
+@keyframes slideDown {
+    from {
+        transform: translateY(-100%);
+    }
+    to {
+        transform: translateY(0);
+    }
+}
+
+.demo-banner a {
+    color: white;
+    text-decoration: underline;
+    margin-left: 1rem;
+    font-weight: 700;
+}
+
+.demo-banner a:hover {
+    opacity: 0.8;
+}
+
+/* Mobile responsive */
+@media (max-width: 768px) {
+    .landing-card {
+        padding: 2rem;
+    }
+
+    .landing-title {
+        font-size: 2rem;
+    }
+
+    .landing-subtitle {
+        font-size: 1rem;
+    }
+
+    .landing-actions {
+        grid-template-columns: 1fr;
+    }
+
+    .feature-item {
+        font-size: 0.95rem;
+    }
+}
+
+/* Welcome back banner */
+.welcome-banner {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 0.75rem 1.5rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.9rem;
+}
+
+.welcome-text {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.api-key-display {
+    font-family: 'Courier New', monospace;
+    background: rgba(255, 255, 255, 0.2);
+    padding: 0.25rem 0.75rem;
+    border-radius: 4px;
+}
+
+.settings-link {
+    color: white;
+    text-decoration: none;
+    padding: 0.5rem 1rem;
+    border: 1px solid white;
+    border-radius: 5px;
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+
+.settings-link:hover {
+    background: rgba(255, 255, 255, 0.2);
+}

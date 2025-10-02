@@ -1,0 +1,819 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Screen stocks based on fundamental parameters including P/E ratio, market cap, ROE, and more">
+    <title>Stock Screener - Fundamental Analysis Tool</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="css/landing.css">
+    <link rel="stylesheet" href="css/components.css">
+</head>
+<body>
+    <!-- Demo Mode Banner (shown only in demo mode) -->
+    <div id="demoBanner" class="demo-banner" style="display: none;">
+        <span>🎬 You're viewing Demo Mode with sample data.</span>
+        <a href="#" onclick="switchToFullMode(); return false;">Enter API Key for Full Features</a>
+    </div>
+
+    <!-- Welcome Banner (shown only in full mode) -->
+    <div id="welcomeBanner" class="welcome-banner" style="display: none;">
+        <div class="welcome-text">
+            <span>👋 Welcome back!</span>
+            <span>API: <span id="maskedApiKey" class="api-key-display"></span></span>
+        </div>
+        <a href="#" class="settings-link" onclick="openApiKeyModal(); return false;">⚙️ Settings</a>
+    </div>
+    <!-- API Key Modal -->
+    <div id="apiKeyModal" class="modal-overlay" role="dialog" aria-labelledby="modalTitle" aria-modal="true">
+        <div class="modal">
+            <div class="modal-header">
+                <h2 id="modalTitle">Welcome to Stock Screener</h2>
+                <button class="modal-close" onclick="closeApiKeyModal()" aria-label="Close modal">&times;</button>
+            </div>
+            <div class="modal-content">
+                <p>To use this application, you'll need a <strong>free API key</strong> from Twelve Data.</p>
+                
+                <div class="info-box">
+                    <p><strong>How to get your free API key:</strong></p>
+                    <p>1. Visit <a href="https://twelvedata.com/" target="_blank" rel="noopener noreferrer">twelvedata.com</a></p>
+                    <p>2. Sign up for a free account</p>
+                    <p>3. Copy your API key from the dashboard</p>
+                    <p>4. Paste it below</p>
+                    <p style="margin-top: 0.5rem;"><small>Free tier includes 800 API credits per day!</small></p>
+                </div>
+                
+                <div class="modal-input-group">
+                    <label for="apiKeyInput">Enter your API key:</label>
+                    <input 
+                        type="text" 
+                        id="apiKeyInput" 
+                        placeholder="Your Twelve Data API key"
+                        aria-label="API key input"
+                        autocomplete="off">
+                    <div class="help-text">Your API key will be stored securely in your browser</div>
+                </div>
+            </div>
+            <div class="modal-actions">
+                <button class="btn btn-secondary" onclick="useDemoMode()">Use Demo Mode</button>
+                <button class="btn btn-primary" onclick="saveApiKey()">Save API Key</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Settings Button -->
+    <button class="settings-button" onclick="openApiKeyModal()" aria-label="API Key Settings" title="Manage API Key">⚙️</button>
+
+    <!-- Watchlists Button -->
+    <button class="watchlists-button" onclick="watchlistManager.showAllWatchlists()" aria-label="My Watchlists" title="Manage Watchlists">
+        ⭐
+    </button>
+
+    <main class="container">
+        <header class="header">
+            <h1>Stock Screener</h1>
+            <p>Screen stocks based on fundamental parameters</p>
+        </header>
+
+        <section class="filter-panel" aria-label="Filter criteria">
+            <h2>Filter Criteria</h2>
+            
+            <!-- Search Section -->
+            <div class="search-section">
+                <div class="filter-group">
+                    <label for="stockSearch">Search by Name or Ticker</label>
+                    <div class="autocomplete-container">
+                        <input type="text" 
+                               id="stockSearch" 
+                               placeholder="e.g., Apple, AAPL, Microsoft, TSLA" 
+                               autocomplete="off"
+                               aria-label="Search stocks by name or ticker symbol"
+                               aria-describedby="searchHelp"
+                               aria-owns="autocompleteDropdown"
+                               aria-autocomplete="list"
+                               oninput="handleSearchInput(this.value)"
+                               onkeydown="handleSearchKeydown(event)"
+                               onfocus="handleSearchFocus()"
+                               onblur="handleSearchBlur()">
+                        <div id="autocompleteDropdown" 
+                             class="autocomplete-dropdown" 
+                             role="listbox"
+                             aria-label="Stock suggestions">
+                            <!-- Autocomplete results will be inserted here -->
+                        </div>
+                    </div>
+                    <span id="searchHelp" class="sr-only">Start typing to search for stocks</span>
+                </div>
+            </div>
+            
+            <div class="filter-grid">
+                <div class="filter-group">
+                    <label for="marketCap">Market Cap (Min)</label>
+                    <select id="marketCap">
+                        <option value="">Any</option>
+                        <option value="small">Small Cap (&lt; $2B)</option>
+                        <option value="mid">Mid Cap ($2B - $10B)</option>
+                        <option value="large">Large Cap (&gt; $10B)</option>
+                    </select>
+                </div>
+
+                <div class="filter-group">
+                    <label for="peRatio">P/E Ratio (Max)</label>
+                    <input type="number" id="peRatio" placeholder="e.g., 25" step="0.1">
+                </div>
+
+                <div class="filter-group">
+                    <label for="peRatioMin">P/E Ratio (Min)</label>
+                    <input type="number" id="peRatioMin" placeholder="e.g., 10" step="0.1">
+                </div>
+
+                <div class="filter-group">
+                    <label for="pbRatio">P/B Ratio (Max)</label>
+                    <input type="number" id="pbRatio" placeholder="e.g., 3" step="0.1">
+                </div>
+
+                <div class="filter-group">
+                    <label for="debtToEquity">Debt/Equity (Max)</label>
+                    <input type="number" id="debtToEquity" placeholder="e.g., 1.5" step="0.1">
+                </div>
+
+                <div class="filter-group">
+                    <label for="roe">ROE (Min %)</label>
+                    <input type="number" id="roe" placeholder="e.g., 15" step="0.1">
+                </div>
+
+                <div class="filter-group">
+                    <label for="revenueGrowth">Revenue Growth (Min %)</label>
+                    <input type="number" id="revenueGrowth" placeholder="e.g., 10" step="0.1">
+                </div>
+
+                <div class="filter-group">
+                    <label for="revenueGrowthYears">Consecutive Years</label>
+                    <input type="number" id="revenueGrowthYears" placeholder="e.g., 3" min="1" max="10" step="1">
+                </div>
+
+                <div class="filter-group">
+                    <label for="sector">Sector</label>
+                    <select id="sector">
+                        <option value="">All Sectors</option>
+                        <option value="Technology">Technology</option>
+                        <option value="Healthcare">Healthcare</option>
+                        <option value="Financial">Financial</option>
+                        <option value="Consumer">Consumer</option>
+                        <option value="Energy">Energy</option>
+                        <option value="Industrial">Industrial</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="filter-actions">
+                <button class="btn btn-primary" onclick="applyFilters()" aria-label="Apply selected filters">Apply Filters</button>
+                <button class="btn btn-secondary" onclick="clearFilters()" aria-label="Clear all filters">Clear All</button>
+                <button class="btn btn-secondary" onclick="refreshData()" title="Refresh data from Twelve Data API" aria-label="Refresh stock data from API">Refresh Data</button>
+            </div>
+        </section>
+
+        <section class="results-section" aria-label="Stock screening results">
+            <div class="results-header">
+                <h2>Screening Results</h2>
+                <div class="results-count" id="resultsCount" role="status" aria-live="polite">Loading...</div>
+                <div id="dataSource" style="font-size: 0.9em; color: #666; margin-top: 0.5rem;" role="status" aria-live="polite">
+                    Data powered by Twelve Data API
+                </div>
+            </div>
+            <div class="table-container">
+                <table class="stock-table" role="table" aria-label="Stock screening results table">
+                    <thead>
+                        <tr>
+                            <th scope="col">Symbol</th>
+                            <th scope="col">Company Name</th>
+                            <th scope="col">Price</th>
+                            <th scope="col">Market Cap</th>
+                            <th scope="col">P/E Ratio</th>
+                            <th scope="col">P/B Ratio</th>
+                            <th scope="col">Debt/Equity</th>
+                            <th scope="col">ROE (%)</th>
+                            <th scope="col">Sector</th>
+                            <th scope="col">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="stockTableBody">
+                        <tr>
+                            <td colspan="10" class="loading">Loading stock data...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </main>
+
+    <!-- Include configuration and modules -->
+    <script src="js/storage-service.js"></script>
+    <script src="js/watchlist-manager.js"></script>
+    <script src="js/stock-details.js"></script>
+    <script src="config.js"></script>
+    <script src="errors.js"></script>
+    <script src="utils.js"></script>
+    <script src="api-service.js"></script>
+    
+    <script>
+        // Initialize services
+        const storage = new StorageService();
+        const watchlistManager = new WatchlistManager(storage);
+        let stockDetailsView; // Will be initialized after apiService
+
+        // Check user mode and show appropriate banner
+        function initializeApp() {
+            const userMode = storage.getUserMode();
+            const apiKey = storage.getApiKey();
+            
+            // If no API key or mode set, redirect to landing page
+            if (!apiKey || !userMode) {
+                window.location.href = 'index.html';
+                return;
+            }
+
+            // Show appropriate banner
+            if (userMode === 'demo') {
+                document.getElementById('demoBanner').style.display = 'block';
+            } else if (userMode === 'full' && apiKey && apiKey !== 'demo') {
+                document.getElementById('welcomeBanner').style.display = 'flex';
+                document.getElementById('maskedApiKey').textContent = storage.getMaskedApiKey();
+            }
+        }
+
+        function switchToFullMode() {
+            openApiKeyModal();
+        }
+
+        // API Key Management
+        function checkApiKey() {
+            const apiKey = storage.getApiKey();
+            if (!apiKey) {
+                // Redirect to landing page if no API key
+                window.location.href = 'index.html';
+                return false;
+            }
+            return true;
+        }
+
+        function openApiKeyModal() {
+            const modal = document.getElementById('apiKeyModal');
+            modal.classList.add('show');
+            document.getElementById('apiKeyInput').focus();
+        }
+
+        function closeApiKeyModal() {
+            const modal = document.getElementById('apiKeyModal');
+            modal.classList.remove('show');
+        }
+
+        function saveApiKey() {
+            const apiKeyInput = document.getElementById('apiKeyInput');
+            const apiKey = apiKeyInput.value.trim();
+            
+            if (!apiKey) {
+                alert('Please enter an API key');
+                return;
+            }
+            
+            // Save to storage
+            storage.setApiKey(apiKey);
+            storage.setUserMode('full');
+            
+            // Close modal
+            closeApiKeyModal();
+            
+            // Update banner
+            document.getElementById('demoBanner').style.display = 'none';
+            document.getElementById('welcomeBanner').style.display = 'flex';
+            document.getElementById('maskedApiKey').textContent = storage.getMaskedApiKey();
+            
+            // Reinitialize the API service with new key
+            window.apiService = new TwelveDataService();
+            
+            // Reload stock data
+            loadStockData();
+            
+            // Show success message
+            alert('API key saved successfully! Loading stock data...');
+        }
+
+        function useDemoMode() {
+            storage.setApiKey('demo');
+            storage.setUserMode('demo');
+            closeApiKeyModal();
+            
+            // Update banner
+            document.getElementById('demoBanner').style.display = 'block';
+            document.getElementById('welcomeBanner').style.display = 'none';
+            
+            // Reinitialize with demo key
+            window.apiService = new TwelveDataService();
+            loadStockData();
+            
+            alert('Using demo mode. Note: Demo mode has limited functionality.');
+        }
+
+        // Close modal when clicking outside
+        document.addEventListener('click', function(event) {
+            const modal = document.getElementById('apiKeyModal');
+            if (event.target === modal) {
+                // Don't close if API key is not set
+                const apiKey = storage.getApiKey();
+                if (apiKey && apiKey !== '') {
+                    closeApiKeyModal();
+                }
+            }
+        });
+
+        // Handle Enter key in API key input
+        document.addEventListener('DOMContentLoaded', function() {
+            const apiKeyInput = document.getElementById('apiKeyInput');
+            if (apiKeyInput) {
+                apiKeyInput.addEventListener('keypress', function(event) {
+                    if (event.key === 'Enter') {
+                        saveApiKey();
+                    }
+                });
+            }
+            
+            // Initialize app mode
+            initializeApp();
+        });
+    </script>
+    
+    <script>
+        // Autocomplete functionality
+        class StockAutocomplete {
+            constructor() {
+                this.searchTimeout = null;
+                this.selectedIndex = -1;
+                this.searchResults = [];
+                this.isLoading = false;
+                this.apiService = null;
+            }
+
+            setApiService(apiService) {
+                this.apiService = apiService;
+            }
+
+            async searchSymbols(query) {
+                if (!this.apiService || query.length < 1) {
+                    return [];
+                }
+
+                this.isLoading = true;
+                this.updateDropdown([]);
+                this.showLoading();
+
+                try {
+                    const results = await this.apiService.searchSymbols(query);
+                    this.searchResults = results;
+                    this.isLoading = false;
+                    this.updateDropdown(results);
+                    return results;
+                } catch (error) {
+                    console.error('Autocomplete search error:', error);
+                    this.isLoading = false;
+                    this.updateDropdown([]);
+                    return [];
+                }
+            }
+
+            updateDropdown(results) {
+                const dropdown = document.getElementById('autocompleteDropdown');
+                const searchInput = document.getElementById('stockSearch');
+                
+                if (this.isLoading) {
+                    return; // Loading display handled separately
+                }
+
+                if (results.length === 0) {
+                    const query = searchInput.value.trim();
+                    if (query.length > 0) {
+                        dropdown.innerHTML = '<div class="autocomplete-no-results">No results found</div>';
+                        dropdown.classList.add('show');
+                        searchInput.classList.add('has-results');
+                    } else {
+                        this.hideDropdown();
+                    }
+                    return;
+                }
+
+                const html = results.map((result, index) => `
+                    <div class="autocomplete-item" 
+                         data-index="${index}"
+                         onclick="autocomplete.selectItem(${index})"
+                         onmouseenter="autocomplete.highlightItem(${index})">
+                        <div class="autocomplete-symbol">${result.symbol}</div>
+                        <div class="autocomplete-name">${result.name}</div>
+                        <div class="autocomplete-exchange">${result.exchange} • ${result.type}</div>
+                    </div>
+                `).join('');
+
+                dropdown.innerHTML = html;
+                dropdown.classList.add('show');
+                searchInput.classList.add('has-results');
+                this.selectedIndex = -1;
+            }
+
+            showLoading() {
+                const dropdown = document.getElementById('autocompleteDropdown');
+                const searchInput = document.getElementById('stockSearch');
+                
+                dropdown.innerHTML = '<div class="autocomplete-loading">Searching...</div>';
+                dropdown.classList.add('show');
+                searchInput.classList.add('has-results');
+            }
+
+            hideDropdown() {
+                const dropdown = document.getElementById('autocompleteDropdown');
+                const searchInput = document.getElementById('stockSearch');
+                
+                dropdown.classList.remove('show');
+                searchInput.classList.remove('has-results');
+                this.selectedIndex = -1;
+            }
+
+            highlightItem(index) {
+                const items = document.querySelectorAll('.autocomplete-item');
+                items.forEach((item, i) => {
+                    if (i === index) {
+                        item.classList.add('highlighted');
+                        this.selectedIndex = index;
+                    } else {
+                        item.classList.remove('highlighted');
+                    }
+                });
+            }
+
+            selectItem(index) {
+                if (index < 0 || index >= this.searchResults.length) return;
+                
+                const selected = this.searchResults[index];
+                const searchInput = document.getElementById('stockSearch');
+                
+                searchInput.value = `${selected.symbol} - ${selected.name}`;
+                this.hideDropdown();
+                
+                // Apply filters with the selected symbol
+                applyFilters();
+                
+                // Focus back to input
+                searchInput.blur();
+            }
+
+            handleKeydown(event) {
+                const dropdown = document.getElementById('autocompleteDropdown');
+                
+                if (!dropdown.classList.contains('show')) {
+                    return;
+                }
+
+                switch (event.key) {
+                    case 'ArrowDown':
+                        event.preventDefault();
+                        this.selectedIndex = Math.min(this.selectedIndex + 1, this.searchResults.length - 1);
+                        this.highlightItem(this.selectedIndex);
+                        break;
+                    
+                    case 'ArrowUp':
+                        event.preventDefault();
+                        this.selectedIndex = Math.max(this.selectedIndex - 1, -1);
+                        if (this.selectedIndex >= 0) {
+                            this.highlightItem(this.selectedIndex);
+                        } else {
+                            document.querySelectorAll('.autocomplete-item').forEach(item => {
+                                item.classList.remove('highlighted');
+                            });
+                        }
+                        break;
+                    
+                    case 'Enter':
+                        event.preventDefault();
+                        if (this.selectedIndex >= 0) {
+                            this.selectItem(this.selectedIndex);
+                        }
+                        break;
+                    
+                    case 'Escape':
+                        event.preventDefault();
+                        this.hideDropdown();
+                        break;
+                }
+            }
+
+            handleInput(value) {
+                clearTimeout(this.searchTimeout);
+                
+                if (value.trim().length === 0) {
+                    this.hideDropdown();
+                    applyFilters();
+                    return;
+                }
+
+                // Debounce search
+                this.searchTimeout = setTimeout(() => {
+                    this.searchSymbols(value.trim());
+                }, 300);
+
+                // Apply filters immediately for existing stocks
+                applyFilters();
+            }
+
+            handleFocus() {
+                const searchInput = document.getElementById('stockSearch');
+                const value = searchInput.value.trim();
+                
+                if (value.length > 0 && this.searchResults.length > 0) {
+                    document.getElementById('autocompleteDropdown').classList.add('show');
+                    searchInput.classList.add('has-results');
+                }
+            }
+
+            handleBlur() {
+                // Delay hiding to allow click events on dropdown items
+                setTimeout(() => {
+                    this.hideDropdown();
+                }, 150);
+            }
+        }
+
+        // Global autocomplete instance
+        const autocomplete = new StockAutocomplete();
+
+        // Event handlers for the search input
+        function handleSearchInput(value) {
+            autocomplete.handleInput(value);
+        }
+
+        function handleSearchKeydown(event) {
+            autocomplete.handleKeydown(event);
+        }
+
+        function handleSearchFocus() {
+            autocomplete.handleFocus();
+        }
+
+        function handleSearchBlur() {
+            autocomplete.handleBlur();
+        }
+    </script>
+
+    <script>
+        // Initialize API service
+        const apiService = new TwelveDataService();
+        
+        // Stock data (will be loaded from API)
+        let stockData = [];
+        let filteredData = [];
+        let isLoading = false;
+
+        function renderStockTable(data) {
+            const tableBody = document.getElementById('stockTableBody');
+            const resultsCount = document.getElementById('resultsCount');
+            
+            if (isLoading) {
+                resultsCount.textContent = 'Loading stock data...';
+                tableBody.innerHTML = `
+                    <tr>
+                        <td colspan="10" class="loading">
+                            <h3>Loading data from Twelve Data API...</h3>
+                            <p>Please wait while we fetch the latest stock information</p>
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+            
+            resultsCount.textContent = `Found ${data.length} stocks matching criteria`;
+            
+            if (data.length === 0) {
+                tableBody.innerHTML = `
+                    <tr>
+                        <td colspan="10" class="no-results">
+                            <h3>No stocks found</h3>
+                            <p>Try adjusting your filter criteria</p>
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            tableBody.innerHTML = data.map(stock => `
+                <tr style="cursor: pointer;" onclick="stockDetailsView.showStockDetails('${stock.symbol}', ${JSON.stringify(stock).replace(/"/g, '&quot;')})">
+                    <td>
+                        <div class="stock-symbol">${escapeHtml(stock.symbol)}</div>
+                    </td>
+                    <td>
+                        <div class="stock-name">${escapeHtml(stock.name)}</div>
+                    </td>
+                    <td>$${stock.price.toFixed(2)}</td>
+                    <td>${formatLargeNumber(stock.marketCap)}</td>
+                    <td>${stock.peRatio.toFixed(1)}</td>
+                    <td>${stock.pbRatio.toFixed(1)}</td>
+                    <td>${stock.debtToEquity.toFixed(2)}</td>
+                    <td class="${stock.roe >= 20 ? 'positive' : ''}">${stock.roe.toFixed(1)}%</td>
+                    <td>${escapeHtml(stock.sector)}</td>
+                    <td onclick="event.stopPropagation();" style="text-align: center;">
+                        <button class="btn btn-sm" style="padding: 0.5rem; font-size: 1.2rem; background: linear-gradient(135deg, #ffc107 0%, #ff9800 100%); border: none; color: white; border-radius: 5px; cursor: pointer;"
+                                onclick="watchlistManager.showWatchlistSelector('${stock.symbol}', '${escapeHtml(stock.name)}')"
+                                title="Add to Watchlist">
+                            ⭐
+                        </button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        // Load stock data from API
+        async function loadStockData() {
+            isLoading = true;
+            renderStockTable([]); // Show loading state
+            
+            try {
+                console.log('Loading stock data from Twelve Data API...');
+                stockData = await apiService.fetchMultipleStocks(CONFIG.DEFAULT_STOCKS);
+                filteredData = [...stockData];
+                
+                console.log('Stock data loaded successfully:', stockData.length, 'stocks');
+                
+                // Check if we're using fallback data (indicated by exact match with known fallback)
+                const usingFallback = stockData.some(stock => 
+                    stock.symbol === 'AAPL' && stock.price === 175.43
+                );
+                
+                const dataSource = document.getElementById('dataSource');
+                if (dataSource) {
+                    if (usingFallback) {
+                        dataSource.textContent = 'Using fallback data (Twelve Data API unavailable in this environment)';
+                        dataSource.style.color = '#f39c12';
+                    } else {
+                        dataSource.textContent = 'Data powered by Twelve Data API';
+                        dataSource.style.color = '#666';
+                    }
+                }
+                
+            } catch (error) {
+                console.error('Error loading stock data:', error);
+                logError(error, { context: 'loadStockData' });
+                
+                // Use fallback data as last resort
+                stockData = CONFIG.DEFAULT_STOCKS.map(symbol => apiService.getFallbackData(symbol));
+                filteredData = [...stockData];
+                
+                const dataSource = document.getElementById('dataSource');
+                if (dataSource) {
+                    const errorMsg = getUserFriendlyErrorMessage(error);
+                    dataSource.textContent = `Using fallback data (${errorMsg})`;
+                    dataSource.style.color = '#e74c3c';
+                }
+            } finally {
+                isLoading = false;
+                renderStockTable(filteredData);
+            }
+        }
+
+        // Add refresh functionality
+        async function refreshData() {
+            apiService.clearCache();
+            await loadStockData();
+        }
+
+        function applyFilters() {
+            // Sanitize search input
+            let stockSearch = sanitizeSearchQuery(document.getElementById('stockSearch').value).toLowerCase();
+            
+            // Extract symbol if user selected from autocomplete (format: "SYMBOL - Company Name")
+            if (stockSearch.includes(' - ')) {
+                stockSearch = stockSearch.split(' - ')[0].toLowerCase();
+            }
+            
+            const marketCap = document.getElementById('marketCap').value;
+            const peRatio = parseFloat(document.getElementById('peRatio').value);
+            const peRatioMin = parseFloat(document.getElementById('peRatioMin').value);
+            const pbRatio = parseFloat(document.getElementById('pbRatio').value);
+            const debtToEquity = parseFloat(document.getElementById('debtToEquity').value);
+            const roe = parseFloat(document.getElementById('roe').value);
+            const revenueGrowth = parseFloat(document.getElementById('revenueGrowth').value);
+            const revenueGrowthYears = parseInt(document.getElementById('revenueGrowthYears').value);
+            const sector = document.getElementById('sector').value;
+
+            // Validate numeric inputs
+            const validations = [
+                { value: peRatio, name: 'P/E Ratio', min: 0 },
+                { value: peRatioMin, name: 'Min P/E Ratio', min: 0 },
+                { value: pbRatio, name: 'P/B Ratio', min: 0 },
+                { value: debtToEquity, name: 'Debt/Equity', min: 0 },
+                { value: roe, name: 'ROE', min: -100, max: 1000 },
+                { value: revenueGrowth, name: 'Revenue Growth', min: -100, max: 1000 },
+                { value: revenueGrowthYears, name: 'Revenue Growth Years', min: 1, max: 10 }
+            ];
+
+            for (const validation of validations) {
+                if (!isNaN(validation.value)) {
+                    if (!validateNumber(validation.value, { 
+                        min: validation.min || 0, 
+                        max: validation.max || Infinity,
+                        allowNaN: true 
+                    })) {
+                        showError(`${validation.name} must be between ${validation.min || 0} and ${validation.max || 'infinity'}`, 'resultsCount');
+                        return;
+                    }
+                }
+            }
+
+            filteredData = stockData.filter(stock => {
+                // Search filter (by name or ticker)
+                if (stockSearch && 
+                    !stock.name.toLowerCase().includes(stockSearch) && 
+                    !stock.symbol.toLowerCase().includes(stockSearch)) {
+                    return false;
+                }
+                
+                // Market Cap filter
+                if (marketCap && getMarketCapCategory(stock.marketCap) !== marketCap) {
+                    return false;
+                }
+                
+                // P/E Ratio filter (max)
+                if (!isNaN(peRatio) && stock.peRatio > peRatio) {
+                    return false;
+                }
+                
+                // P/E Ratio filter (min)
+                if (!isNaN(peRatioMin) && stock.peRatio < peRatioMin) {
+                    return false;
+                }
+                
+                // P/B Ratio filter
+                if (!isNaN(pbRatio) && stock.pbRatio > pbRatio) {
+                    return false;
+                }
+                
+                // Debt/Equity filter
+                if (!isNaN(debtToEquity) && stock.debtToEquity > debtToEquity) {
+                    return false;
+                }
+                
+                // ROE filter
+                if (!isNaN(roe) && stock.roe < roe) {
+                    return false;
+                }
+                
+                // Revenue Growth filter
+                if (!isNaN(revenueGrowth) && stock.revenueGrowth < revenueGrowth) {
+                    return false;
+                }
+                
+                // Revenue Growth Years filter
+                if (!isNaN(revenueGrowthYears) && stock.revenueGrowthYears < revenueGrowthYears) {
+                    return false;
+                }
+                
+                // Sector filter
+                if (sector && stock.sector !== sector) {
+                    return false;
+                }
+                
+                return true;
+            });
+
+            renderStockTable(filteredData);
+        }
+
+        function clearFilters() {
+            document.getElementById('stockSearch').value = '';
+            document.getElementById('marketCap').value = '';
+            document.getElementById('peRatio').value = '';
+            document.getElementById('peRatioMin').value = '';
+            document.getElementById('pbRatio').value = '';
+            document.getElementById('debtToEquity').value = '';
+            document.getElementById('roe').value = '';
+            document.getElementById('revenueGrowth').value = '';
+            document.getElementById('revenueGrowthYears').value = '';
+            document.getElementById('sector').value = '';
+            
+            filteredData = [...stockData];
+            renderStockTable(filteredData);
+        }
+
+        // Initialize the application
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('Stock Screener initializing with Twelve Data API...');
+            
+            console.log('API Key configured:', CONFIG.TWELVE_DATA_API_KEY ? 'Yes' : 'No');
+            
+            // Initialize stock details view
+            stockDetailsView = new StockDetailsView(window.apiService);
+            
+            // Initialize autocomplete with API service
+            autocomplete.setApiService(apiService);
+            
+            // Load stock data from API
+            loadStockData();
+        });
+    </script>
+</body>
+</html>
