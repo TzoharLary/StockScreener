@@ -177,9 +177,22 @@ StockScreener/
 
 ## Future Enhancements
 
-- Additional filtering criteria (dividend yield, revenue growth, etc.)
-- Stock charts and detailed company information
-- Save and load custom screening profiles
-- Export filtered results to CSV/Excel
-- Watchlist functionality
-- Portfolio tracking capabilities
+See our detailed [Feature Roadmap](FEATURE_ROADMAP.md) for a comprehensive evaluation and prioritization of upcoming features.
+
+### Priority 0 - Coming Soon
+- 💾 Save/load custom screening profiles
+- 📊 Export filtered results to CSV/Excel
+- 🌙 Dark mode toggle
+
+### Priority 1 - Planned
+- 📈 Historical price charts with technical indicators
+- 📰 Latest news and events for stocks
+
+### Priority 2 - Under Consideration
+- 🔔 Notifications/alerts for custom criteria
+- 🌍 Multi-language support
+
+### Priority 3 - Future Vision
+- 💼 Full portfolio tracking capabilities
+
+For detailed analysis, complexity estimates, and implementation details, see [FEATURE_ROADMAP.md](FEATURE_ROADMAP.md).
