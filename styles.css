@@ -550,6 +550,29 @@ button:focus {
     box-shadow: 0 6px 16px rgba(102, 126, 234, 0.5);
 }
 
+/* Watchlists Button */
+.watchlists-button {
+    position: fixed;
+    bottom: 80px;
+    right: 20px;
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #ffc107 0%, #ff9800 100%);
+    color: white;
+    border: none;
+    font-size: 1.5rem;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(255, 193, 7, 0.4);
+    transition: all 0.3s ease;
+    z-index: 1000;
+}
+
+.watchlists-button:hover {
+    transform: scale(1.1);
+    box-shadow: 0 6px 16px rgba(255, 193, 7, 0.5);
+}
+
 @media (max-width: 768px) {
     .modal {
         padding: 1.5rem;

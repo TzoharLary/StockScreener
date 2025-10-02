@@ -7,6 +7,7 @@
     <title>Stock Screener - Fundamental Analysis Tool</title>
     <link rel="stylesheet" href="styles.css">
     <link rel="stylesheet" href="css/landing.css">
+    <link rel="stylesheet" href="css/components.css">
 </head>
 <body>
     <!-- Demo Mode Banner (shown only in demo mode) -->
@@ -62,6 +63,11 @@
 
     <!-- Settings Button -->
     <button class="settings-button" onclick="openApiKeyModal()" aria-label="API Key Settings" title="Manage API Key">⚙️</button>
+
+    <!-- Watchlists Button -->
+    <button class="watchlists-button" onclick="watchlistManager.showAllWatchlists()" aria-label="My Watchlists" title="Manage Watchlists">
+        ⭐
+    </button>
 
     <main class="container">
         <header class="header">
@@ -188,11 +194,12 @@
                             <th scope="col">Debt/Equity</th>
                             <th scope="col">ROE (%)</th>
                             <th scope="col">Sector</th>
+                            <th scope="col">Actions</th>
                         </tr>
                     </thead>
                     <tbody id="stockTableBody">
                         <tr>
-                            <td colspan="9" class="loading">Loading stock data...</td>
+                            <td colspan="10" class="loading">Loading stock data...</td>
                         </tr>
                     </tbody>
                 </table>
@@ -202,14 +209,18 @@
 
     <!-- Include configuration and modules -->
     <script src="js/storage-service.js"></script>
+    <script src="js/watchlist-manager.js"></script>
+    <script src="js/stock-details.js"></script>
     <script src="config.js"></script>
     <script src="errors.js"></script>
     <script src="utils.js"></script>
     <script src="api-service.js"></script>
     
     <script>
-        // Initialize storage service
+        // Initialize services
         const storage = new StorageService();
+        const watchlistManager = new WatchlistManager(storage);
+        let stockDetailsView; // Will be initialized after apiService
 
         // Check user mode and show appropriate banner
         function initializeApp() {
@@ -567,7 +578,7 @@
                 resultsCount.textContent = 'Loading stock data...';
                 tableBody.innerHTML = `
                     <tr>
-                        <td colspan="9" class="loading">
+                        <td colspan="10" class="loading">
                             <h3>Loading data from Twelve Data API...</h3>
                             <p>Please wait while we fetch the latest stock information</p>
                         </td>
@@ -581,7 +592,7 @@
             if (data.length === 0) {
                 tableBody.innerHTML = `
                     <tr>
-                        <td colspan="9" class="no-results">
+                        <td colspan="10" class="no-results">
                             <h3>No stocks found</h3>
                             <p>Try adjusting your filter criteria</p>
                         </td>
@@ -591,7 +602,7 @@
             }
 
             tableBody.innerHTML = data.map(stock => `
-                <tr>
+                <tr style="cursor: pointer;" onclick="stockDetailsView.showStockDetails('${stock.symbol}', ${JSON.stringify(stock).replace(/"/g, '&quot;')})">
                     <td>
                         <div class="stock-symbol">${escapeHtml(stock.symbol)}</div>
                     </td>
@@ -605,6 +616,13 @@
                     <td>${stock.debtToEquity.toFixed(2)}</td>
                     <td class="${stock.roe >= 20 ? 'positive' : ''}">${stock.roe.toFixed(1)}%</td>
                     <td>${escapeHtml(stock.sector)}</td>
+                    <td onclick="event.stopPropagation();" style="text-align: center;">
+                        <button class="btn btn-sm" style="padding: 0.5rem; font-size: 1.2rem; background: linear-gradient(135deg, #ffc107 0%, #ff9800 100%); border: none; color: white; border-radius: 5px; cursor: pointer;"
+                                onclick="watchlistManager.showWatchlistSelector('${stock.symbol}', '${escapeHtml(stock.name)}')"
+                                title="Add to Watchlist">
+                            ⭐
+                        </button>
+                    </td>
                 </tr>
             `).join('');
         }
@@ -786,6 +804,9 @@
             console.log('Stock Screener initializing with Twelve Data API...');
             
             console.log('API Key configured:', CONFIG.TWELVE_DATA_API_KEY ? 'Yes' : 'No');
+            
+            // Initialize stock details view
+            stockDetailsView = new StockDetailsView(window.apiService);
             
             // Initialize autocomplete with API service
             autocomplete.setApiService(apiService);
