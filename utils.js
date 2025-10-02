@@ -8,8 +8,10 @@
  * @returns {string} - Escaped string
  */
 function escapeHtml(str) {
-    if (typeof str !== 'string') return str;
-    
+    if (typeof str !== 'string') {
+        return str;
+    }
+
     const div = document.createElement('div');
     div.textContent = str;
     return div.innerHTML;
@@ -23,13 +25,13 @@ function escapeHtml(str) {
  */
 function validateNumber(value, options = {}) {
     const { min = -Infinity, max = Infinity, allowNaN = true } = options;
-    
+
     const num = parseFloat(value);
-    
+
     if (isNaN(num)) {
         return allowNaN;
     }
-    
+
     return num >= min && num <= max;
 }
 
@@ -41,13 +43,13 @@ function validateNumber(value, options = {}) {
  */
 function validateInteger(value, options = {}) {
     const { min = -Infinity, max = Infinity, allowNaN = true } = options;
-    
+
     const num = parseInt(value);
-    
+
     if (isNaN(num)) {
         return allowNaN;
     }
-    
+
     return Number.isInteger(num) && num >= min && num <= max;
 }
 
@@ -92,8 +94,12 @@ function formatLargeNumber(num, decimals = 2) {
  * @returns {string} - Category: 'small', 'mid', or 'large'
  */
 function getMarketCapCategory(marketCap) {
-    if (marketCap < CONFIG.MARKET_CAP_THRESHOLDS.SMALL_CAP) return 'small';
-    if (marketCap < CONFIG.MARKET_CAP_THRESHOLDS.MID_CAP) return 'mid';
+    if (marketCap < CONFIG.MARKET_CAP_THRESHOLDS.SMALL_CAP) {
+        return 'small';
+    }
+    if (marketCap < CONFIG.MARKET_CAP_THRESHOLDS.MID_CAP) {
+        return 'mid';
+    }
     return 'large';
 }
 
@@ -103,9 +109,11 @@ function getMarketCapCategory(marketCap) {
  * @returns {string} - Sanitized query
  */
 function sanitizeSearchQuery(query) {
-    if (typeof query !== 'string') return '';
+    if (typeof query !== 'string') {
+        return '';
+    }
     // Remove special characters that could be problematic
-    return query.trim().replace(/[<>\"']/g, '');
+    return query.trim().replace(/[<>"']/g, '');
 }
 
 /**
@@ -115,21 +123,23 @@ function sanitizeSearchQuery(query) {
  */
 function showError(message, elementId) {
     const element = document.getElementById(elementId);
-    if (!element) return;
-    
+    if (!element) {
+        return;
+    }
+
     const errorDiv = document.createElement('div');
     errorDiv.className = 'error-message';
     errorDiv.textContent = message;
     errorDiv.setAttribute('role', 'alert');
-    
+
     // Remove any existing error messages
     const existingError = element.querySelector('.error-message');
     if (existingError) {
         existingError.remove();
     }
-    
+
     element.appendChild(errorDiv);
-    
+
     // Auto-remove after 5 seconds
     setTimeout(() => {
         errorDiv.remove();
@@ -142,8 +152,10 @@ function showError(message, elementId) {
  */
 function clearError(elementId) {
     const element = document.getElementById(elementId);
-    if (!element) return;
-    
+    if (!element) {
+        return;
+    }
+
     const errorDiv = element.querySelector('.error-message');
     if (errorDiv) {
         errorDiv.remove();
