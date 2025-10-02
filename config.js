@@ -1,6 +1,10 @@
 // Configuration file for Stock Screener
 // IMPORTANT: Keep your API key private and never commit it to version control
 // If you don't have an API key, get one free at: https://twelvedata.com/
+//
+// Twelve Data API Documentation: https://twelvedata.com/docs
+// Free tier includes: 8 API calls/minute, 800 API calls/day
+// Attribution requirement: Display "Data powered by Twelve Data API" (included in UI)
 
 const CONFIG = {
     // Twelve Data API Configuration
