@@ -448,7 +448,7 @@
                 });
             }
 
-            selectItem(index) {
+            async selectItem(index) {
                 if (index < 0 || index >= this.searchResults.length) return;
                 
                 const selected = this.searchResults[index];
@@ -456,6 +456,36 @@
                 
                 searchInput.value = `${selected.symbol} - ${selected.name}`;
                 this.hideDropdown();
+                
+                // Check if stock is already in stockData
+                const stockExists = stockData.some(stock => 
+                    stock.symbol.toUpperCase() === selected.symbol.toUpperCase()
+                );
+                
+                if (!stockExists) {
+                    // Show loading state
+                    const resultsCount = document.getElementById('resultsCount');
+                    const originalText = resultsCount.textContent;
+                    resultsCount.textContent = `Loading data for ${selected.symbol}...`;
+                    
+                    try {
+                        // Fetch the stock data
+                        const newStockData = await apiService.getStockData(selected.symbol);
+                        
+                        // Add to stockData array
+                        stockData.push(newStockData);
+                        
+                        console.log(`Added ${selected.symbol} to stock data`);
+                    } catch (error) {
+                        console.error(`Failed to fetch data for ${selected.symbol}:`, error);
+                        resultsCount.textContent = `Error loading ${selected.symbol}. Try again.`;
+                        setTimeout(() => {
+                            applyFilters();
+                        }, 2000);
+                        searchInput.blur();
+                        return;
+                    }
+                }
                 
                 // Apply filters with the selected symbol
                 applyFilters();
