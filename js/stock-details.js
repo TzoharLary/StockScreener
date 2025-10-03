@@ -10,6 +10,9 @@ class StockDetailsView {
         const modal = this.createModal(symbol);
         document.body.appendChild(modal);
 
+        // Add show class to display the modal
+        setTimeout(() => modal.classList.add('show'), 10);
+
         try {
             // Fetch detailed data if not provided
             if (!stockData) {
