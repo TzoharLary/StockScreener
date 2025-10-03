@@ -65,7 +65,15 @@ class StorageService {
     }
 
     setPreferences(preferences) {
-        localStorage.setItem(this.STORAGE_KEYS.PREFERENCES, JSON.stringify(preferences));
+        try {
+            localStorage.setItem(this.STORAGE_KEYS.PREFERENCES, JSON.stringify(preferences));
+        } catch (error) {
+            if (error.name === 'QuotaExceededError') {
+                console.error('localStorage quota exceeded when saving preferences');
+            } else {
+                throw error;
+            }
+        }
     }
 
     updatePreference(key, value) {
@@ -105,7 +113,21 @@ class StorageService {
     }
 
     setWatchlists(watchlists) {
-        localStorage.setItem(this.STORAGE_KEYS.WATCHLISTS, JSON.stringify(watchlists));
+        try {
+            localStorage.setItem(this.STORAGE_KEYS.WATCHLISTS, JSON.stringify(watchlists));
+        } catch (error) {
+            if (error.name === 'QuotaExceededError') {
+                console.error('localStorage quota exceeded when saving watchlists');
+                // Try to show error to user if showError function exists
+                if (typeof showError === 'function') {
+                    showError('Storage quota exceeded. Please remove some watchlists or stocks.', 'resultsCount');
+                } else {
+                    alert('Storage quota exceeded. Please remove some watchlists or stocks.');
+                }
+            } else {
+                throw error;
+            }
+        }
     }
 
     getWatchlist(id) {

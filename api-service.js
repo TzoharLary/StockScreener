@@ -13,15 +13,50 @@ class TwelveDataService {
         this.baseUrl = CONFIG.TWELVE_DATA_BASE_URL;
         this.cache = new Map();
         this.cacheTimestamps = new Map();
+        this.watchlistSymbols = new Set(); // Track watchlist symbols
+        this.MAX_CACHE_SIZE = 20; // Limit cache to 20 stocks (per user requirement)
     }
 
-    // Check if cached data is still valid
+    // Check if cached data is still valid (excluding price)
     isCacheValid(symbol) {
         if (!this.cache.has(symbol) || !this.cacheTimestamps.has(symbol)) {
             return false;
         }
         const timestamp = this.cacheTimestamps.get(symbol);
         return (Date.now() - timestamp) < CONFIG.CACHE_DURATION;
+    }
+
+    // Add symbol to watchlist tracking
+    addToWatchlist(symbol) {
+        this.watchlistSymbols.add(symbol);
+    }
+
+    // Remove symbol from watchlist tracking
+    removeFromWatchlist(symbol) {
+        this.watchlistSymbols.delete(symbol);
+    }
+
+    // Clean up cache, keeping watchlist stocks and most recent searches
+    cleanupCache() {
+        if (this.cache.size <= this.MAX_CACHE_SIZE) {
+            return;
+        }
+
+        // Get all symbols sorted by timestamp (oldest first)
+        const sortedByTime = Array.from(this.cacheTimestamps.entries())
+            .sort((a, b) => a[1] - b[1]);
+
+        // Remove oldest entries that are not in watchlist
+        for (const [symbol] of sortedByTime) {
+            if (this.cache.size <= this.MAX_CACHE_SIZE) {
+                break;
+            }
+            // Don't remove watchlist symbols
+            if (!this.watchlistSymbols.has(symbol)) {
+                this.cache.delete(symbol);
+                this.cacheTimestamps.delete(symbol);
+            }
+        }
     }
 
     // Get cached data or fetch new data
@@ -32,16 +67,17 @@ class TwelveDataService {
             return this.getFallbackData(symbol);
         }
 
-        if (this.isCacheValid(symbol)) {
-            console.log(`Using cached data for ${symbol}`);
-            return this.cache.get(symbol);
-        }
-
+        // Per user requirement: Always fetch fresh price from API
         try {
-            console.log(`Fetching fresh data for ${symbol} from Twelve Data API...`);
+            console.log(`Fetching fresh price for ${symbol} from Twelve Data API...`);
             const data = await this.fetchStockData(symbol);
+
+            // Cache the data (but price will be refreshed on next call)
             this.cache.set(symbol, data);
             this.cacheTimestamps.set(symbol, Date.now());
+
+            // Clean up cache if needed
+            this.cleanupCache();
 
             // If data appears invalid (all zeros), warn and suggest fallback
             if (data.price === 0 && data.marketCap === 0 && data.peRatio === 0) {

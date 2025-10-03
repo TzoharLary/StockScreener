@@ -617,6 +617,7 @@
         let stockData = [];
         let filteredData = [];
         let isLoading = false;
+        let loadingInProgress = false; // Prevent concurrent loads (BUG-027)
 
         function renderStockTable(data) {
             const tableBody = document.getElementById('stockTableBody');
@@ -679,6 +680,13 @@
 
         // Load stock data from API
         async function loadStockData() {
+            // Prevent concurrent loads (BUG-027)
+            if (loadingInProgress) {
+                console.log('Load already in progress, skipping...');
+                return;
+            }
+            
+            loadingInProgress = true;
             isLoading = true;
             renderStockTable([]); // Show loading state
             
@@ -721,6 +729,7 @@
                 }
             } finally {
                 isLoading = false;
+                loadingInProgress = false; // Reset flag
                 renderStockTable(filteredData);
             }
         }
