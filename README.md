@@ -154,6 +154,32 @@ If you want to run the application locally or contribute to development:
 
 **Note**: The API key is stored in your browser's localStorage. You don't need to edit any files!
 
+## ⚠️ Security Notice
+
+### API Key Storage
+This is a **client-side application** that stores API keys in browser localStorage. Please be aware of the following security considerations:
+
+**Current Implementation:**
+- API keys are stored in plain text in browser localStorage
+- Keys are accessible to any JavaScript running on the page
+- Keys are visible in browser DevTools (Application > Local Storage)
+
+**Recommendations:**
+- ✅ **Use only free-tier API keys** with this application
+- ✅ **Never use production or paid API keys** client-side
+- ✅ **Understand that client-side storage is inherently less secure**
+- ✅ **Monitor your API usage** on the Twelve Data dashboard
+- ✅ **Regenerate your API key** if you suspect it has been compromised
+
+**For Production Use:**
+The most secure approach would be to implement a backend server that:
+- Stores the API key securely (environment variables, key vault)
+- Proxies all API requests
+- Implements rate limiting and request validation
+- Protects the API key from client-side exposure
+
+This client-side implementation is designed for **personal use and development purposes only**.
+
 ## Project Structure
 
 ```

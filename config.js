@@ -2,6 +2,13 @@
 // IMPORTANT: Keep your API key private and never commit it to version control
 // If you don't have an API key, get one free at: https://twelvedata.com/
 //
+// SECURITY NOTICE:
+// This client-side application stores API keys in browser localStorage.
+// - Only use free-tier API keys (never production/paid keys)
+// - Client-side storage is accessible to JavaScript and visible in DevTools
+// - For production use, implement a backend proxy to secure API keys
+// - This implementation is for personal use and development only
+//
 // Twelve Data API Documentation: https://twelvedata.com/docs
 // Free tier includes: 8 API calls/minute, 800 API calls/day
 // Attribution requirement: Display "Data powered by Twelve Data API" (included in UI)

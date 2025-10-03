@@ -44,7 +44,12 @@ function validateNumber(value, options = {}) {
 function validateInteger(value, options = {}) {
     const { min = -Infinity, max = Infinity, allowNaN = true } = options;
 
-    const num = parseInt(value);
+    // Check if string contains decimal point (BUG-007)
+    if (typeof value === 'string' && value.includes('.')) {
+        return false;
+    }
+
+    const num = parseInt(value, 10); // Add radix (BUG-008)
 
     if (isNaN(num)) {
         return allowNaN;
@@ -78,14 +83,26 @@ function debounce(func, wait) {
  * @returns {string} - Formatted string
  */
 function formatLargeNumber(num, decimals = 2) {
-    if (num >= CONFIG.FORMAT_THRESHOLDS.TRILLION) {
-        return '$' + (num / CONFIG.FORMAT_THRESHOLDS.TRILLION).toFixed(decimals) + 'T';
-    } else if (num >= CONFIG.FORMAT_THRESHOLDS.BILLION) {
-        return '$' + (num / CONFIG.FORMAT_THRESHOLDS.BILLION).toFixed(decimals) + 'B';
-    } else if (num >= CONFIG.FORMAT_THRESHOLDS.MILLION) {
-        return '$' + (num / CONFIG.FORMAT_THRESHOLDS.MILLION).toFixed(decimals) + 'M';
+    // Handle invalid inputs (BUG-014)
+    if (typeof num !== 'number' || !isFinite(num)) {
+        return '$0.00';
     }
-    return '$' + num.toLocaleString();
+
+    const isNegative = num < 0;
+    const absNum = Math.abs(num);
+
+    let formatted;
+    if (absNum >= CONFIG.FORMAT_THRESHOLDS.TRILLION) {
+        formatted = '$' + (absNum / CONFIG.FORMAT_THRESHOLDS.TRILLION).toFixed(decimals) + 'T';
+    } else if (absNum >= CONFIG.FORMAT_THRESHOLDS.BILLION) {
+        formatted = '$' + (absNum / CONFIG.FORMAT_THRESHOLDS.BILLION).toFixed(decimals) + 'B';
+    } else if (absNum >= CONFIG.FORMAT_THRESHOLDS.MILLION) {
+        formatted = '$' + (absNum / CONFIG.FORMAT_THRESHOLDS.MILLION).toFixed(decimals) + 'M';
+    } else {
+        formatted = '$' + absNum.toLocaleString();
+    }
+
+    return isNegative ? '-' + formatted : formatted;
 }
 
 /**

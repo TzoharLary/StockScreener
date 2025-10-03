@@ -111,30 +111,30 @@
                     <label for="marketCap">Market Cap (Min)</label>
                     <select id="marketCap">
                         <option value="">Any</option>
-                        <option value="small">Small Cap (&lt; $2B)</option>
+                        <option value="small">Small Cap (≤ $2B)</option>
                         <option value="mid">Mid Cap ($2B - $10B)</option>
-                        <option value="large">Large Cap (&gt; $10B)</option>
+                        <option value="large">Large Cap (≥ $10B)</option>
                     </select>
                 </div>
 
                 <div class="filter-group">
                     <label for="peRatio">P/E Ratio (Max)</label>
-                    <input type="number" id="peRatio" placeholder="e.g., 25" step="0.1">
+                    <input type="number" id="peRatio" placeholder="e.g., 25" step="0.1" min="0">
                 </div>
 
                 <div class="filter-group">
                     <label for="peRatioMin">P/E Ratio (Min)</label>
-                    <input type="number" id="peRatioMin" placeholder="e.g., 10" step="0.1">
+                    <input type="number" id="peRatioMin" placeholder="e.g., 10" step="0.1" min="0">
                 </div>
 
                 <div class="filter-group">
                     <label for="pbRatio">P/B Ratio (Max)</label>
-                    <input type="number" id="pbRatio" placeholder="e.g., 3" step="0.1">
+                    <input type="number" id="pbRatio" placeholder="e.g., 3" step="0.1" min="0">
                 </div>
 
                 <div class="filter-group">
                     <label for="debtToEquity">Debt/Equity (Max)</label>
-                    <input type="number" id="debtToEquity" placeholder="e.g., 1.5" step="0.1">
+                    <input type="number" id="debtToEquity" placeholder="e.g., 1.5" step="0.1" min="0">
                 </div>
 
                 <div class="filter-group">
@@ -352,6 +352,9 @@
                 this.searchResults = [];
                 this.isLoading = false;
                 this.apiService = null;
+                this.currentRequestId = 0; // Track request order
+                this.abortController = null; // For canceling requests
+                this.blurTimeout = null; // Track blur timeout (BUG-009)
             }
 
             setApiService(apiService) {
@@ -363,20 +366,36 @@
                     return [];
                 }
 
+                // Cancel previous request
+                if (this.abortController) {
+                    this.abortController.abort();
+                }
+
+                // Create new abort controller for this request
+                this.abortController = new AbortController();
+                const requestId = ++this.currentRequestId;
+
                 this.isLoading = true;
                 this.updateDropdown([]);
                 this.showLoading();
 
                 try {
                     const results = await this.apiService.searchSymbols(query);
-                    this.searchResults = results;
-                    this.isLoading = false;
-                    this.updateDropdown(results);
+                    
+                    // Only update if this is still the latest request
+                    if (requestId === this.currentRequestId) {
+                        this.searchResults = results;
+                        this.isLoading = false;
+                        this.updateDropdown(results);
+                    }
                     return results;
                 } catch (error) {
-                    console.error('Autocomplete search error:', error);
-                    this.isLoading = false;
-                    this.updateDropdown([]);
+                    // Ignore abort errors (expected when canceling)
+                    if (error.name !== 'AbortError' && requestId === this.currentRequestId) {
+                        console.error('Autocomplete search error:', error);
+                        this.isLoading = false;
+                        this.updateDropdown([]);
+                    }
                     return [];
                 }
             }
@@ -450,6 +469,12 @@
 
             async selectItem(index) {
                 if (index < 0 || index >= this.searchResults.length) return;
+                
+                // Clear blur timeout when item selected (BUG-009)
+                if (this.blurTimeout) {
+                    clearTimeout(this.blurTimeout);
+                    this.blurTimeout = null;
+                }
                 
                 const selected = this.searchResults[index];
                 const searchInput = document.getElementById('stockSearch');
@@ -563,10 +588,17 @@
             }
 
             handleBlur() {
+                // Clear previous timeout (BUG-009)
+                if (this.blurTimeout) {
+                    clearTimeout(this.blurTimeout);
+                }
+                
                 // Delay hiding to allow click events on dropdown items
-                setTimeout(() => {
+                // Increased from 150ms to 200ms for better touch device support
+                this.blurTimeout = setTimeout(() => {
                     this.hideDropdown();
-                }, 150);
+                    this.blurTimeout = null;
+                }, 200);
             }
         }
 
@@ -599,6 +631,7 @@
         let stockData = [];
         let filteredData = [];
         let isLoading = false;
+        let loadingInProgress = false; // Prevent concurrent loads (BUG-027)
 
         function renderStockTable(data) {
             const tableBody = document.getElementById('stockTableBody');
@@ -632,7 +665,7 @@
             }
 
             tableBody.innerHTML = data.map(stock => `
-                <tr style="cursor: pointer;" onclick="stockDetailsView.showStockDetails('${stock.symbol}', ${JSON.stringify(stock).replace(/"/g, '&quot;')})">
+                <tr class="stock-row" data-symbol="${escapeHtml(stock.symbol)}" style="cursor: pointer;">
                     <td>
                         <div class="stock-symbol">${escapeHtml(stock.symbol)}</div>
                     </td>
@@ -646,9 +679,11 @@
                     <td>${stock.debtToEquity.toFixed(2)}</td>
                     <td class="${stock.roe >= 20 ? 'positive' : ''}">${stock.roe.toFixed(1)}%</td>
                     <td>${escapeHtml(stock.sector)}</td>
-                    <td onclick="event.stopPropagation();" style="text-align: center;">
-                        <button class="btn btn-sm" style="padding: 0.5rem; font-size: 1.2rem; background: linear-gradient(135deg, #ffc107 0%, #ff9800 100%); border: none; color: white; border-radius: 5px; cursor: pointer;"
-                                onclick="watchlistManager.showWatchlistSelector('${stock.symbol}', '${escapeHtml(stock.name)}')"
+                    <td style="text-align: center;">
+                        <button class="btn btn-sm watchlist-btn" 
+                                data-symbol="${escapeHtml(stock.symbol)}" 
+                                data-name="${escapeHtml(stock.name)}"
+                                style="padding: 0.5rem; font-size: 1.2rem; background: linear-gradient(135deg, #ffc107 0%, #ff9800 100%); border: none; color: white; border-radius: 5px; cursor: pointer;"
                                 title="Add to Watchlist">
                             ⭐
                         </button>
@@ -659,6 +694,13 @@
 
         // Load stock data from API
         async function loadStockData() {
+            // Prevent concurrent loads (BUG-027)
+            if (loadingInProgress) {
+                console.log('Load already in progress, skipping...');
+                return;
+            }
+            
+            loadingInProgress = true;
             isLoading = true;
             renderStockTable([]); // Show loading state
             
@@ -701,6 +743,7 @@
                 }
             } finally {
                 isLoading = false;
+                loadingInProgress = false; // Reset flag
                 renderStockTable(filteredData);
             }
         }
@@ -727,7 +770,7 @@
             const debtToEquity = parseFloat(document.getElementById('debtToEquity').value);
             const roe = parseFloat(document.getElementById('roe').value);
             const revenueGrowth = parseFloat(document.getElementById('revenueGrowth').value);
-            const revenueGrowthYears = parseInt(document.getElementById('revenueGrowthYears').value);
+            const revenueGrowthYears = parseInt(document.getElementById('revenueGrowthYears').value, 10);
             const sector = document.getElementById('sector').value;
 
             // Validate numeric inputs
@@ -752,6 +795,12 @@
                         return;
                     }
                 }
+            }
+            
+            // Validate min/max relationship (BUG-016)
+            if (!isNaN(peRatio) && !isNaN(peRatioMin) && peRatioMin > peRatio) {
+                showError('P/E Ratio Min cannot be greater than Max', 'resultsCount');
+                return;
             }
 
             filteredData = stockData.filter(stock => {
@@ -840,6 +889,32 @@
             
             // Initialize autocomplete with API service
             autocomplete.setApiService(apiService);
+            
+            // Add event delegation for stock table clicks
+            const tableBody = document.getElementById('stockTableBody');
+            if (tableBody) {
+                tableBody.addEventListener('click', function(e) {
+                    const row = e.target.closest('.stock-row');
+                    if (row && !e.target.closest('.watchlist-btn')) {
+                        const symbol = row.dataset.symbol;
+                        const stock = stockData.find(s => s.symbol === symbol);
+                        if (stock && stockDetailsView) {
+                            stockDetailsView.showStockDetails(symbol, stock);
+                        }
+                    }
+                    
+                    // Handle watchlist button clicks
+                    const watchlistBtn = e.target.closest('.watchlist-btn');
+                    if (watchlistBtn) {
+                        e.stopPropagation();
+                        const symbol = watchlistBtn.dataset.symbol;
+                        const name = watchlistBtn.dataset.name;
+                        if (watchlistManager) {
+                            watchlistManager.showWatchlistSelector(symbol, name);
+                        }
+                    }
+                });
+            }
             
             // Load stock data from API
             loadStockData();

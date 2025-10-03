@@ -55,9 +55,8 @@ class StockDetailsView {
 
     // Fetch stock data from API
     async fetchStockData(symbol) {
-        // This method would use the API service to fetch detailed data
-        // For now, we'll use the basic stock data that's already loaded
-        return this.apiService ? await this.apiService.fetchStockData([symbol]).then(data => data[0]) : null;
+        // Use getStockData which properly fetches data for a single symbol
+        return this.apiService ? await this.apiService.getStockData(symbol) : null;
     }
 
     // Update modal with stock data
@@ -74,16 +73,10 @@ class StockDetailsView {
             <div class="stock-header">
                 <div class="stock-title">
                     <span class="stock-symbol-large">${symbol}</span>
-                    <span class="stock-name-large">${stockData.companyName || 'N/A'}</span>
+                    <span class="stock-name-large">${stockData.name || 'N/A'}</span>
                 </div>
                 <div class="stock-price-large">
                     <span class="price">$${stockData.price ? stockData.price.toFixed(2) : 'N/A'}</span>
-                    ${stockData.change !== undefined ? `
-                        <span class="change ${stockData.change >= 0 ? 'positive' : 'negative'}">
-                            ${stockData.change >= 0 ? '+' : ''}${stockData.change.toFixed(2)} 
-                            (${stockData.changePercent >= 0 ? '+' : ''}${stockData.changePercent.toFixed(2)}%)
-                        </span>
-                    ` : ''}
                 </div>
             </div>
         `;
