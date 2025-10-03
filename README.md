@@ -185,7 +185,7 @@ This client-side implementation is designed for **personal use and development p
 ```
 StockScreener/
 ├── index.html              # Landing page with Demo/Full Version options
-├── app.html                # Main application interface
+├── app.html                # Main application interface (minimal HTML, loads modules)
 ├── config.js               # Configuration (API keys, settings, default stocks)
 ├── api-service.js          # Twelve Data API service class
 ├── errors.js               # Custom error classes
@@ -197,10 +197,42 @@ StockScreener/
 ├── js/
 │   ├── storage-service.js  # localStorage management
 │   ├── watchlist-manager.js # Watchlist functionality
-│   └── stock-details.js    # Stock details view
+│   ├── stock-details.js    # Stock details view
+│   ├── app-init.js         # App initialization and API key management
+│   ├── autocomplete.js     # Stock search autocomplete functionality
+│   └── main-app.js         # Main application logic (filtering, rendering)
 ├── package.json            # Project metadata and scripts
 └── README.md               # Documentation
 ```
+
+### Architecture Overview
+
+The application follows a modular architecture with clear separation of concerns:
+
+**Core Modules** (root directory):
+- `api-service.js` - Handles all API communication with Twelve Data
+- `errors.js` - Custom error classes and error handling utilities
+- `utils.js` - Shared utility functions (validation, formatting, sanitization)
+- `config.js` - Configuration and constants
+
+**Application Modules** (`js/` directory):
+- `app-init.js` - Application initialization and API key management
+- `autocomplete.js` - Stock search with autocomplete functionality
+- `main-app.js` - Core application logic (filtering, data management, rendering)
+- `storage-service.js` - LocalStorage wrapper for persistent data
+- `watchlist-manager.js` - Watchlist creation and management
+- `stock-details.js` - Detailed stock information modal
+
+**Styling** (`css/` directory):
+- `styles.css` - Main application styles
+- `landing.css` - Landing page specific styles
+- `components.css` - Reusable component styles
+
+This modular design provides:
+- 🎯 **Clear separation of concerns** - Each module has a single responsibility
+- 🔧 **Easy maintenance** - Changes are isolated to specific modules
+- 🧪 **Better testability** - Modules can be tested independently
+- 📦 **Improved reusability** - Components can be reused across the application
 
 ## Usage
 
