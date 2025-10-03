@@ -34,6 +34,12 @@ Thumbs.db
 api-keys.js
 secrets.js
 
+# Test coverage
+coverage/
+.nyc_output/
+
+# Jest cache
+.jest-cache/
+
 # Test files (development only)
 test-*.html
-test-*.js
