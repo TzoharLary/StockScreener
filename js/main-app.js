@@ -139,31 +139,47 @@ class MainApp {
 
     async addStockFromAutocomplete(selectedStock) {
         // Check if stock is already in stockData
-        const stockExists = this.stockData.some(stock =>
+        const existingStock = this.stockData.find(stock =>
             stock.symbol.toUpperCase() === selectedStock.symbol.toUpperCase()
         );
 
-        if (!stockExists) {
-            // Show loading state
-            const resultsCount = document.getElementById('resultsCount');
-            resultsCount.textContent = `Loading data for ${selectedStock.symbol}...`;
+        if (existingStock) {
+            // Return existing stock data
+            return existingStock;
+        }
 
-            try {
-                // Fetch the stock data
-                const newStockData = await this.apiService.getStockData(selectedStock.symbol);
+        // Show loading state
+        const resultsCount = document.getElementById('resultsCount');
+        resultsCount.textContent = `Loading data for ${selectedStock.symbol}...`;
 
-                // Add to stockData array
-                this.stockData.push(newStockData);
+        try {
+            // Fetch the stock data
+            const newStockData = await this.apiService.getStockData(selectedStock.symbol);
 
-                console.log(`Added ${selectedStock.symbol} to stock data`);
-            } catch (error) {
-                console.error(`Failed to fetch data for ${selectedStock.symbol}:`, error);
-                resultsCount.textContent = `Error loading ${selectedStock.symbol}. Try again.`;
-                setTimeout(() => {
-                    this.applyFilters();
-                }, 2000);
-                return;
-            }
+            // Add to stockData array
+            this.stockData.push(newStockData);
+
+            console.log(`Added ${selectedStock.symbol} to stock data`);
+
+            // Return the newly fetched stock data
+            return newStockData;
+        } catch (error) {
+            console.error(`Failed to fetch data for ${selectedStock.symbol}:`, error);
+            resultsCount.textContent = `Error loading ${selectedStock.symbol}. Try again.`;
+            setTimeout(() => {
+                this.applyFilters();
+            }, 2000);
+            return null;
+        }
+    }
+
+    async showStockDetailsFromAutocomplete(selectedStock) {
+        // First, ensure the stock data is loaded
+        const stockData = await this.addStockFromAutocomplete(selectedStock);
+
+        // If stock data was successfully fetched, show the details modal
+        if (stockData && this.stockDetailsView) {
+            this.stockDetailsView.showStockDetails(selectedStock.symbol, stockData);
         }
     }
 

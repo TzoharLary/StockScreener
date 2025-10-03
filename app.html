@@ -256,7 +256,8 @@
             autocomplete.setApiService(apiService);
             autocomplete.setCallbacks(
                 (selectedStock) => mainApp.addStockFromAutocomplete(selectedStock),
-                () => mainApp.applyFilters()
+                () => mainApp.applyFilters(),
+                (selectedStock) => mainApp.showStockDetailsFromAutocomplete(selectedStock)
             );
             
             // Set up event listeners

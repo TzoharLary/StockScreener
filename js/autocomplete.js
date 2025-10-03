@@ -11,15 +11,17 @@ class StockAutocomplete {
         this.blurTimeout = null; // Track blur timeout (BUG-009)
         this.onStockAdded = null; // Callback when new stock is added
         this.onFilterApply = null; // Callback to apply filters
+        this.onStockSelected = null; // Callback when stock is selected from autocomplete
     }
 
     setApiService(apiService) {
         this.apiService = apiService;
     }
 
-    setCallbacks(onStockAdded, onFilterApply) {
+    setCallbacks(onStockAdded, onFilterApply, onStockSelected = null) {
         this.onStockAdded = onStockAdded;
         this.onFilterApply = onFilterApply;
+        this.onStockSelected = onStockSelected;
     }
 
     async searchSymbols(query) {
@@ -148,6 +150,11 @@ class StockAutocomplete {
         // Call callback to add stock (if provided)
         if (this.onStockAdded) {
             await this.onStockAdded(selected);
+        }
+
+        // Call callback to show stock details (if provided)
+        if (this.onStockSelected) {
+            await this.onStockSelected(selected);
         }
 
         // Apply filters
