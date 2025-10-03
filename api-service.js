@@ -10,8 +10,10 @@
 
 // Load dependencies if in Node.js environment
 if (typeof CONFIG === 'undefined' && typeof require !== 'undefined') {
-    const CONFIG = require('./config.js');
-    const { APIError, NetworkError, TimeoutError } = require('./errors.js');
+    // eslint-disable-next-line no-global-assign
+    CONFIG = require('./config.js');
+    // eslint-disable-next-line no-global-assign
+    ({ APIError, NetworkError, TimeoutError } = require('./errors.js'));
 }
 
 class TwelveDataService {

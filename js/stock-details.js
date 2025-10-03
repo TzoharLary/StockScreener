@@ -4,6 +4,10 @@ class StockDetailsView {
         this.apiService = apiService;
     }
 
+    setApiService(apiService) {
+        this.apiService = apiService;
+    }
+
     // Show detailed stock information
     async showStockDetails(symbol, stockData = null) {
         // Create modal with loading state

@@ -16,6 +16,10 @@ class MainApp {
         this.stockDetailsView = stockDetailsView;
     }
 
+    setApiService(apiService) {
+        this.apiService = apiService;
+    }
+
     renderStockTable(data) {
         const tableBody = document.getElementById('stockTableBody');
         const resultsCount = document.getElementById('resultsCount');

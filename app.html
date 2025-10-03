@@ -231,9 +231,16 @@
         // Initialize app modules
         const mainApp = new MainApp(apiService, storage, watchlistManager);
         const autocomplete = new StockAutocomplete();
+        let stockDetailsView = null; // Will be initialized in DOMContentLoaded
+        
         const appInitializer = new AppInitializer(storage, () => {
             // Callback when API key changes
             window.apiService = new TwelveDataService();
+            mainApp.setApiService(window.apiService);
+            autocomplete.setApiService(window.apiService);
+            if (stockDetailsView) {
+                stockDetailsView.setApiService(window.apiService);
+            }
             mainApp.loadStockData();
         });
         
@@ -249,7 +256,7 @@
             console.log('API Key configured:', CONFIG.TWELVE_DATA_API_KEY ? 'Yes' : 'No');
             
             // Initialize stock details view
-            const stockDetailsView = new StockDetailsView(apiService);
+            stockDetailsView = new StockDetailsView(apiService);
             mainApp.setStockDetailsView(stockDetailsView);
             
             // Set up autocomplete with callbacks
