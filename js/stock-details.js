@@ -175,7 +175,7 @@ class StockDetailsView {
                         <div class="profile-grid">
                             <div class="profile-item">
                                 <strong>Company Name:</strong>
-                                <span>${stockData.companyName || 'N/A'}</span>
+                                <span>${stockData.name || 'N/A'}</span>
                             </div>
                             <div class="profile-item">
                                 <strong>Symbol:</strong>
@@ -209,7 +209,7 @@ class StockDetailsView {
             </div>
 
             <div class="stock-details-actions">
-                <button class="btn btn-primary" onclick="watchlistManager.showWatchlistSelector('${symbol}', '${stockData.companyName || symbol}')">
+                <button class="btn btn-primary" onclick="watchlistManager.showWatchlistSelector('${symbol}', '${stockData.name || symbol}')">
                     ⭐ Add to Watchlist
                 </button>
                 <button class="btn btn-secondary" onclick="this.closest('.modal-overlay').remove()">
