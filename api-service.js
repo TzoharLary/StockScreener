@@ -92,8 +92,9 @@ class TwelveDataService {
             // Clean up cache if needed
             this.cleanupCache();
 
-            // If data appears invalid (all zeros), warn and suggest fallback
-            if (data.price === 0 && data.marketCap === 0 && data.peRatio === 0) {
+            // If data appears invalid (all critical fields are zero or null), warn and suggest fallback
+            const hasCriticalData = data.price > 0 || data.marketCap > 0 || data.peRatio > 0;
+            if (!hasCriticalData) {
                 console.warn(`⚠️  API returned invalid data for ${symbol}. This could be due to:`);
                 console.warn('   - Rate limiting (free tier: 8 calls/min, 800/day)');
                 console.warn('   - Symbol not found');
@@ -338,9 +339,10 @@ class TwelveDataService {
 
         console.log(`Formatted data for ${symbol}:`, formattedData);
 
-        // If all critical values are 0, log a warning
-        if (formattedData.price === 0 && formattedData.marketCap === 0 && formattedData.peRatio === 0) {
-            console.warn(`Warning: All values are 0 for ${symbol}. API may have returned unexpected format or is rate limited.`);
+        // If all critical values are 0 or null, log a warning
+        const hasCriticalData = formattedData.price > 0 || formattedData.marketCap > 0 || formattedData.peRatio > 0;
+        if (!hasCriticalData) {
+            console.warn(`Warning: No valid critical data for ${symbol}. API may have returned unexpected format or is rate limited.`);
             console.warn('Consider using fallback data or checking API response structure.');
         }
 
@@ -416,18 +418,20 @@ class TwelveDataService {
             'NVDA': { symbol: 'NVDA', name: 'NVIDIA Corporation', price: 487.84, marketCap: 1200000000000, peRatio: 67.8, pbRatio: 47.3, debtToEquity: 0.42, roe: 71.2, sector: 'Technology', revenueGrowth: 125.9, revenueGrowthYears: 5 }
         };
 
+        // Return known fallback data if available, otherwise return null values to indicate unavailable data
         return fallbackData[symbol] || {
             symbol: symbol,
             name: `${symbol} Inc.`,
-            price: 0,
-            marketCap: 0,
-            peRatio: 0,
-            pbRatio: 0,
-            debtToEquity: 0,
-            roe: 0,
-            sector: 'Technology',
-            revenueGrowth: 0,
-            revenueGrowthYears: 1
+            price: null,  // Changed from 0 to null to indicate data not available
+            marketCap: null,  // Changed from 0 to null
+            peRatio: null,  // Changed from 0 to null
+            pbRatio: null,  // Changed from 0 to null
+            debtToEquity: null,  // Changed from 0 to null
+            roe: null,  // Changed from 0 to null
+            sector: 'Unknown',  // More descriptive than 'Technology' for unknown stocks
+            revenueGrowth: null,  // Changed from 0 to null
+            revenueGrowthYears: 1,
+            dataAvailable: false  // Flag to indicate this is placeholder data
         };
     }
 

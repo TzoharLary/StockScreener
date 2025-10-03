@@ -51,20 +51,26 @@ class MainApp {
             return;
         }
 
-        tableBody.innerHTML = data.map(stock => `
-            <tr class="stock-row" data-symbol="${escapeHtml(stock.symbol)}" style="cursor: pointer;">
+        tableBody.innerHTML = data.map(stock => {
+            // Check if this stock has data available
+            const hasData = stock.dataAvailable !== false && (stock.price > 0 || stock.marketCap > 0);
+            const naClass = !hasData ? ' style="color: #999; font-style: italic;"' : '';
+            const naTooltip = !hasData ? ' title="Data not available - API key may be needed"' : '';
+            
+            return `
+            <tr class="stock-row" data-symbol="${escapeHtml(stock.symbol)}" style="cursor: pointer;"${naTooltip}>
                 <td>
                     <div class="stock-symbol">${escapeHtml(stock.symbol)}</div>
                 </td>
                 <td>
                     <div class="stock-name">${escapeHtml(stock.name)}</div>
                 </td>
-                <td>$${stock.price.toFixed(2)}</td>
-                <td>${formatLargeNumber(stock.marketCap)}</td>
-                <td>${stock.peRatio.toFixed(1)}</td>
-                <td>${stock.pbRatio.toFixed(1)}</td>
-                <td>${stock.debtToEquity.toFixed(2)}</td>
-                <td class="${stock.roe >= 20 ? 'positive' : ''}">${stock.roe.toFixed(1)}%</td>
+                <td${naClass}>${stock.price !== null && stock.price !== undefined ? '$' + stock.price.toFixed(2) : 'N/A'}</td>
+                <td${naClass}>${stock.marketCap !== null && stock.marketCap !== undefined ? formatLargeNumber(stock.marketCap) : 'N/A'}</td>
+                <td${naClass}>${stock.peRatio !== null && stock.peRatio !== undefined ? stock.peRatio.toFixed(1) : 'N/A'}</td>
+                <td${naClass}>${stock.pbRatio !== null && stock.pbRatio !== undefined ? stock.pbRatio.toFixed(1) : 'N/A'}</td>
+                <td${naClass}>${stock.debtToEquity !== null && stock.debtToEquity !== undefined ? stock.debtToEquity.toFixed(2) : 'N/A'}</td>
+                <td class="${stock.roe >= 20 ? 'positive' : ''}"${naClass}>${stock.roe !== null && stock.roe !== undefined ? stock.roe.toFixed(1) + '%' : 'N/A'}</td>
                 <td>${escapeHtml(stock.sector)}</td>
                 <td style="text-align: center;">
                     <button class="btn btn-sm watchlist-btn" 
@@ -76,7 +82,8 @@ class MainApp {
                     </button>
                 </td>
             </tr>
-        `).join('');
+        `;
+        }).join('');
     }
 
     // Load stock data from API
