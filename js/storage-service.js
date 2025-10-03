@@ -11,7 +11,7 @@ class StorageService {
         // Default preferences
         this.DEFAULT_PREFERENCES = {
             defaultView: 'table',
-            visibleColumns: ['symbol', 'companyName', 'price', 'marketCap', 'peRatio', 'pbRatio', 'debtToEquity', 'roe', 'sector'],
+            visibleColumns: ['symbol', 'name', 'price', 'marketCap', 'peRatio', 'pbRatio', 'debtToEquity', 'roe', 'sector'],
             theme: 'light'
         };
     }
