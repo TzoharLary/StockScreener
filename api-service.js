@@ -9,12 +9,16 @@
 // Attribution: "Data powered by Twelve Data API" is displayed in the UI
 class TwelveDataService {
     constructor() {
-        this.apiKey = CONFIG.TWELVE_DATA_API_KEY;
         this.baseUrl = CONFIG.TWELVE_DATA_BASE_URL;
         this.cache = new Map();
         this.cacheTimestamps = new Map();
         this.watchlistSymbols = new Set(); // Track watchlist symbols
         this.MAX_CACHE_SIZE = 20; // Limit cache to 20 stocks (per user requirement)
+    }
+
+    // Get API key dynamically to support runtime updates
+    get apiKey() {
+        return CONFIG.TWELVE_DATA_API_KEY;
     }
 
     // Check if cached data is still valid (excluding price)
