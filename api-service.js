@@ -125,7 +125,13 @@ class TwelveDataService {
             }
 
             console.log(`Falling back to cached/static data for ${symbol}`);
-            return this.getFallbackData(symbol);
+            const fallbackData = this.getFallbackData(symbol);
+            
+            // Cache the fallback data so subsequent calls can use it
+            this.cache.set(symbol, fallbackData);
+            this.cacheTimestamps.set(symbol, Date.now());
+            
+            return fallbackData;
         }
     }
 
