@@ -137,9 +137,20 @@ class StorageService {
 
     addWatchlist(name, description = '') {
         const watchlists = this.getWatchlists();
+        
+        // Check for duplicate name and auto-increment if needed (BUG-011)
+        const existingNames = watchlists.map(w => w.name.toLowerCase());
+        let finalName = name;
+        let counter = 1;
+        
+        while (existingNames.includes(finalName.toLowerCase())) {
+            counter++;
+            finalName = `${name} (${counter})`;
+        }
+        
         const newWatchlist = {
             id: this.generateId(),
-            name,
+            name: finalName,
             description,
             stocks: [],
             notes: {},
@@ -161,13 +172,21 @@ class StorageService {
     addStockToWatchlist(watchlistId, symbol) {
         const watchlists = this.getWatchlists();
         const watchlist = watchlists.find(w => w.id === watchlistId);
-        if (watchlist && !watchlist.stocks.includes(symbol)) {
-            watchlist.stocks.push(symbol);
-            watchlist.updatedAt = new Date().toISOString();
-            this.setWatchlists(watchlists);
-            return true;
+        
+        if (!watchlist) {
+            console.error(`Watchlist ${watchlistId} not found`);
+            return { success: false, error: 'WATCHLIST_NOT_FOUND' };
         }
-        return false;
+        
+        if (watchlist.stocks.includes(symbol)) {
+            console.log(`Stock ${symbol} already in watchlist ${watchlistId}`);
+            return { success: false, error: 'ALREADY_EXISTS' };
+        }
+        
+        watchlist.stocks.push(symbol);
+        watchlist.updatedAt = new Date().toISOString();
+        this.setWatchlists(watchlists);
+        return { success: true };
     }
 
     removeStockFromWatchlist(watchlistId, symbol) {

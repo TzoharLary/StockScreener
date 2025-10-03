@@ -354,6 +354,7 @@
                 this.apiService = null;
                 this.currentRequestId = 0; // Track request order
                 this.abortController = null; // For canceling requests
+                this.blurTimeout = null; // Track blur timeout (BUG-009)
             }
 
             setApiService(apiService) {
@@ -469,6 +470,12 @@
             async selectItem(index) {
                 if (index < 0 || index >= this.searchResults.length) return;
                 
+                // Clear blur timeout when item selected (BUG-009)
+                if (this.blurTimeout) {
+                    clearTimeout(this.blurTimeout);
+                    this.blurTimeout = null;
+                }
+                
                 const selected = this.searchResults[index];
                 const searchInput = document.getElementById('stockSearch');
                 
@@ -581,10 +588,17 @@
             }
 
             handleBlur() {
+                // Clear previous timeout (BUG-009)
+                if (this.blurTimeout) {
+                    clearTimeout(this.blurTimeout);
+                }
+                
                 // Delay hiding to allow click events on dropdown items
-                setTimeout(() => {
+                // Increased from 150ms to 200ms for better touch device support
+                this.blurTimeout = setTimeout(() => {
                     this.hideDropdown();
-                }, 150);
+                    this.blurTimeout = null;
+                }, 200);
             }
         }
 
