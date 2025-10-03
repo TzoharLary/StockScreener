@@ -57,7 +57,26 @@ class TwelveDataService {
 
             return data;
         } catch (error) {
-            console.error(`Error fetching data for ${symbol}:`, error);
+            // Improved error handling - distinguish between error types
+            if (typeof APIError !== 'undefined' && error instanceof APIError) {
+                if (error.statusCode === 429) {
+                    console.warn(`Rate limit exceeded for ${symbol}`);
+                    // Try to use stale cache if available
+                    if (this.cache.has(symbol)) {
+                        console.log(`Using stale cache for ${symbol} due to rate limit`);
+                        return this.cache.get(symbol);
+                    }
+                } else if (error.statusCode === 404) {
+                    console.warn(`Symbol ${symbol} not found in API`);
+                } else if (error.statusCode === 401) {
+                    console.error('API authentication failed - check API key');
+                }
+            } else if (typeof NetworkError !== 'undefined' && error instanceof NetworkError) {
+                console.error(`Network error fetching ${symbol}:`, error.message);
+            } else if (typeof TimeoutError !== 'undefined' && error instanceof TimeoutError) {
+                console.error(`Request timeout for ${symbol}`);
+            }
+
             console.log(`Falling back to cached/static data for ${symbol}`);
             return this.getFallbackData(symbol);
         }

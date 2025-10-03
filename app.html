@@ -352,6 +352,8 @@
                 this.searchResults = [];
                 this.isLoading = false;
                 this.apiService = null;
+                this.currentRequestId = 0; // Track request order
+                this.abortController = null; // For canceling requests
             }
 
             setApiService(apiService) {
@@ -363,20 +365,36 @@
                     return [];
                 }
 
+                // Cancel previous request
+                if (this.abortController) {
+                    this.abortController.abort();
+                }
+
+                // Create new abort controller for this request
+                this.abortController = new AbortController();
+                const requestId = ++this.currentRequestId;
+
                 this.isLoading = true;
                 this.updateDropdown([]);
                 this.showLoading();
 
                 try {
                     const results = await this.apiService.searchSymbols(query);
-                    this.searchResults = results;
-                    this.isLoading = false;
-                    this.updateDropdown(results);
+                    
+                    // Only update if this is still the latest request
+                    if (requestId === this.currentRequestId) {
+                        this.searchResults = results;
+                        this.isLoading = false;
+                        this.updateDropdown(results);
+                    }
                     return results;
                 } catch (error) {
-                    console.error('Autocomplete search error:', error);
-                    this.isLoading = false;
-                    this.updateDropdown([]);
+                    // Ignore abort errors (expected when canceling)
+                    if (error.name !== 'AbortError' && requestId === this.currentRequestId) {
+                        console.error('Autocomplete search error:', error);
+                        this.isLoading = false;
+                        this.updateDropdown([]);
+                    }
                     return [];
                 }
             }
@@ -729,7 +747,7 @@
             const debtToEquity = parseFloat(document.getElementById('debtToEquity').value);
             const roe = parseFloat(document.getElementById('roe').value);
             const revenueGrowth = parseFloat(document.getElementById('revenueGrowth').value);
-            const revenueGrowthYears = parseInt(document.getElementById('revenueGrowthYears').value);
+            const revenueGrowthYears = parseInt(document.getElementById('revenueGrowthYears').value, 10);
             const sector = document.getElementById('sector').value;
 
             // Validate numeric inputs

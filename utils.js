@@ -44,7 +44,12 @@ function validateNumber(value, options = {}) {
 function validateInteger(value, options = {}) {
     const { min = -Infinity, max = Infinity, allowNaN = true } = options;
 
-    const num = parseInt(value);
+    // Check if string contains decimal point (BUG-007)
+    if (typeof value === 'string' && value.includes('.')) {
+        return false;
+    }
+
+    const num = parseInt(value, 10); // Add radix (BUG-008)
 
     if (isNaN(num)) {
         return allowNaN;
