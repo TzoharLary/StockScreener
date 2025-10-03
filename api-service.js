@@ -10,8 +10,10 @@
 
 // Load dependencies if in Node.js environment
 if (typeof CONFIG === 'undefined' && typeof require !== 'undefined') {
-    var CONFIG = require('./config.js');
-    var { APIError, NetworkError, TimeoutError } = require('./errors.js');
+    // eslint-disable-next-line no-global-assign
+    CONFIG = require('./config.js');
+    // eslint-disable-next-line no-global-assign
+    ({ APIError, NetworkError, TimeoutError } = require('./errors.js'));
 }
 
 class TwelveDataService {
@@ -126,11 +128,11 @@ class TwelveDataService {
 
             console.log(`Falling back to cached/static data for ${symbol}`);
             const fallbackData = this.getFallbackData(symbol);
-            
+
             // Cache the fallback data so subsequent calls can use it
             this.cache.set(symbol, fallbackData);
             this.cacheTimestamps.set(symbol, Date.now());
-            
+
             return fallbackData;
         }
     }
