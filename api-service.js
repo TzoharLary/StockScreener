@@ -7,6 +7,13 @@
 // - /symbol_search - Search for stock symbols
 // Rate limits (free tier): 8 calls/min, 800 calls/day
 // Attribution: "Data powered by Twelve Data API" is displayed in the UI
+
+// Load dependencies if in Node.js environment
+if (typeof CONFIG === 'undefined' && typeof require !== 'undefined') {
+    var CONFIG = require('./config.js');
+    var { APIError, NetworkError, TimeoutError } = require('./errors.js');
+}
+
 class TwelveDataService {
     constructor() {
         this.baseUrl = CONFIG.TWELVE_DATA_BASE_URL;
@@ -118,7 +125,13 @@ class TwelveDataService {
             }
 
             console.log(`Falling back to cached/static data for ${symbol}`);
-            return this.getFallbackData(symbol);
+            const fallbackData = this.getFallbackData(symbol);
+            
+            // Cache the fallback data so subsequent calls can use it
+            this.cache.set(symbol, fallbackData);
+            this.cacheTimestamps.set(symbol, Date.now());
+            
+            return fallbackData;
         }
     }
 

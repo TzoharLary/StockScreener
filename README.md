@@ -250,6 +250,65 @@ This modular design provides:
 - **Styling**: Custom CSS with modern design patterns
 - **Architecture**: Modular design with separate configuration and API service modules
 
+## Testing
+
+### Comprehensive Test Suite
+
+The project includes a comprehensive test suite that validates all Twelve Data API endpoints and statistics. The tests ensure data accuracy and completeness for all companies.
+
+#### Running Tests
+
+```bash
+# Quick validation tests (5-10 minutes)
+./quick-test.sh
+
+# Run all tests (Note: Takes 30-60 minutes due to API rate limiting)
+npm test
+
+# Run specific test file
+npm test api-service.test.js
+npm test search-display.test.js
+npm test edge-cases.test.js
+
+# Run tests in watch mode
+npm run test:watch
+
+# Run tests with coverage report
+npm run test:coverage
+```
+
+#### Test Coverage
+
+The test suite includes:
+
+**API Endpoint Tests**
+- `/quote` - Stock prices and market data
+- `/statistics` - Fundamental metrics (P/E, P/B, ROE, Debt/Equity, etc.)
+- `/profile` - Company information and sector
+- `/symbol_search` - Autocomplete and search functionality
+
+**Statistics Validation** (for each company):
+- Price, Market Cap, P/E Ratio, P/B Ratio
+- Debt-to-Equity, ROE, Revenue Growth
+- Company Name, Sector
+
+**Companies Tested**:
+- Default stocks: AAPL, GOOGL, MSFT, TSLA, JNJ, JPM, V, PG, XOM, HD
+- Additional stocks: NVDA, META, AMZN, NFLX, AMD, INTC, CRM, ORCL, ADBE, DIS
+
+**Edge Cases**:
+- Invalid symbols, Rate limiting, Network failures
+- Missing data fields, Zero value detection
+- Cache behavior, Fallback mechanisms
+
+#### Important Notes
+
+⚠️ **Rate Limiting**: The free tier API has limits of 8 calls/minute and 800 calls/day. Tests include delays to respect these limits, which makes the full suite take 30-60 minutes to complete.
+
+⚠️ **Zero Value Detection**: Tests specifically check for zero values in critical fields (price, marketCap, peRatio) as requested in issue requirements. Warnings are logged when zeros are detected, and tests fail only if ALL critical fields are zero.
+
+For detailed test documentation, see `__tests__/README.md`.
+
 ## Future Enhancements
 
 ### Priority 0 - Coming Soon
