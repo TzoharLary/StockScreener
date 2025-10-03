@@ -74,6 +74,12 @@ class WatchlistManager {
     toggleStockInWatchlist(watchlistId, symbol, stockName, button) {
         const watchlist = this.storage.getWatchlist(watchlistId);
         
+        // Add null check
+        if (!watchlist) {
+            this.showToast('Watchlist not found. Please refresh the page.', 'error');
+            return;
+        }
+        
         if (watchlist.stocks.includes(symbol)) {
             // Remove from watchlist
             this.storage.removeStockFromWatchlist(watchlistId, symbol);

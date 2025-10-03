@@ -632,7 +632,7 @@
             }
 
             tableBody.innerHTML = data.map(stock => `
-                <tr style="cursor: pointer;" onclick="stockDetailsView.showStockDetails('${stock.symbol}', ${JSON.stringify(stock).replace(/"/g, '&quot;')})">
+                <tr class="stock-row" data-symbol="${escapeHtml(stock.symbol)}" style="cursor: pointer;">
                     <td>
                         <div class="stock-symbol">${escapeHtml(stock.symbol)}</div>
                     </td>
@@ -646,9 +646,11 @@
                     <td>${stock.debtToEquity.toFixed(2)}</td>
                     <td class="${stock.roe >= 20 ? 'positive' : ''}">${stock.roe.toFixed(1)}%</td>
                     <td>${escapeHtml(stock.sector)}</td>
-                    <td onclick="event.stopPropagation();" style="text-align: center;">
-                        <button class="btn btn-sm" style="padding: 0.5rem; font-size: 1.2rem; background: linear-gradient(135deg, #ffc107 0%, #ff9800 100%); border: none; color: white; border-radius: 5px; cursor: pointer;"
-                                onclick="watchlistManager.showWatchlistSelector('${stock.symbol}', '${escapeHtml(stock.name)}')"
+                    <td style="text-align: center;">
+                        <button class="btn btn-sm watchlist-btn" 
+                                data-symbol="${escapeHtml(stock.symbol)}" 
+                                data-name="${escapeHtml(stock.name)}"
+                                style="padding: 0.5rem; font-size: 1.2rem; background: linear-gradient(135deg, #ffc107 0%, #ff9800 100%); border: none; color: white; border-radius: 5px; cursor: pointer;"
                                 title="Add to Watchlist">
                             ⭐
                         </button>
@@ -840,6 +842,32 @@
             
             // Initialize autocomplete with API service
             autocomplete.setApiService(apiService);
+            
+            // Add event delegation for stock table clicks
+            const tableBody = document.getElementById('stockTableBody');
+            if (tableBody) {
+                tableBody.addEventListener('click', function(e) {
+                    const row = e.target.closest('.stock-row');
+                    if (row && !e.target.closest('.watchlist-btn')) {
+                        const symbol = row.dataset.symbol;
+                        const stock = stockData.find(s => s.symbol === symbol);
+                        if (stock && stockDetailsView) {
+                            stockDetailsView.showStockDetails(symbol, stock);
+                        }
+                    }
+                    
+                    // Handle watchlist button clicks
+                    const watchlistBtn = e.target.closest('.watchlist-btn');
+                    if (watchlistBtn) {
+                        e.stopPropagation();
+                        const symbol = watchlistBtn.dataset.symbol;
+                        const name = watchlistBtn.dataset.name;
+                        if (watchlistManager) {
+                            watchlistManager.showWatchlistSelector(symbol, name);
+                        }
+                    }
+                });
+            }
             
             // Load stock data from API
             loadStockData();
